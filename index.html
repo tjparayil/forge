@@ -85,6 +85,8 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
 .wday.cardio .wd-dot{background:var(--phase2)}
 .wday.cardio .wd-type{color:var(--phase2)}
 .wday.rest .wd-dot{background:var(--surface2)}
+.wday.completed .wd-dot{box-shadow:0 0 0 2px var(--accent);background:var(--accent) !important}
+.wday.completed .wd-type{color:var(--accent) !important}
 .wday.today{outline:1.5px solid var(--accent);outline-offset:1px}
 .wday.selected{outline:1.5px solid var(--accent);outline-offset:1px;transform:scale(1.05)}
 
@@ -142,7 +144,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
 .ex-card-name{font-size:14px;font-weight:500;color:var(--text);flex:1}
 .ex-card-sets{font-size:13px;color:var(--accent);font-weight:500;white-space:nowrap}
 .ex-card-tip{font-size:11px;color:var(--muted);margin-top:5px;line-height:1.5}
-.ex-check{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;transition:all .2s}
+.ex-check{width:32px;height:32px;border-radius:50%;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;transition:all .2s;-webkit-tap-highlight-color:transparent}
 .ex-card.done .ex-check{background:var(--accent);border-color:var(--accent)}
 .ex-card.done .ex-check svg{stroke:#0e0e0f}
 .ex-check svg{width:12px;height:12px;stroke:var(--muted);fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
@@ -873,7 +875,11 @@ function renderWeekGrid() {
     const typeClass = t === 'rest' ? 'rest' : t === 'CARDIO' ? 'cardio' : 'lift';
     const typeLabel = t === 'rest' ? 'Rest' : t === 'CARDIO' ? 'Cardio' : 'Lift';
     const todayClass = i === todayIdx ? 'today' : '';
-    html += `<div class="wday ${typeClass} ${todayClass}" onclick="openDayDrawer(${i})" title="${dayFull[i]}">
+    // Check if this day has a completed session
+    const dayDate = getDateForWeekday(i);
+    const dateStr = dayDate.toISOString().slice(0,10);
+    const completed = getSessionForDate(dateStr) ? 'completed' : '';
+    html += `<div class="wday ${typeClass} ${todayClass} ${completed}" onclick="openDayDrawer(${i})" title="${dayFull[i]}">
       <div class="wd-name">${d}</div>
       <div class="wd-dot"></div>
       <div class="wd-type">${typeLabel}</div>
@@ -1028,7 +1034,7 @@ function loadWorkout(id) {
     }).join('');
 
     return `<div class="ex-card" id="exc-${i}">
-      <div class="ex-card-top" onclick="toggleExercise(${i})" style="cursor:pointer">
+      <div class="ex-card-top">
         <div style="flex:1">
           <div class="ex-card-name">${e.name}</div>
           <div class="ex-card-tip">${e.tip}</div>
@@ -1037,7 +1043,7 @@ function loadWorkout(id) {
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0">
           <div class="ex-card-sets">${e.sets}</div>
-          <div class="ex-check" id="chk-${i}">
+          <div class="ex-check" id="chk-${i}" onclick="toggleExercise(${i})" style="cursor:pointer">
             <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
           </div>
         </div>
@@ -1316,21 +1322,14 @@ function finishWorkout() {
   document.getElementById('currentWeek').textContent = state.currentWeek;
 
   // Show summary overlay
-  showWorkoutSummary(w, elapsed);
+  const summaryData = buildSessionSummary(w, elapsed);
+  saveSessionHistory(summaryData);
+  showWorkoutSummaryFromData(summaryData);
 }
 
-// #6: Workout summary screen
-function showWorkoutSummary(w, elapsedSec) {
-  const overlay = document.getElementById('summaryOverlay');
-  const elMin = Math.floor(elapsedSec / 60);
-  const elSec = elapsedSec % 60;
-  const timeStr = `${elMin}:${elSec.toString().padStart(2,'0')}`;
+// Build session summary data object
+function buildSessionSummary(w, elapsedSec) {
   const isCardio = w && w.id === 'CARDIO';
-
-  document.getElementById('summaryTitle').textContent = 'SESSION COMPLETE';
-  document.getElementById('summarySub').textContent = w ? `${w.title} · ${new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'short'})}` : 'Great work!';
-
-  // Count logged sets and find PRs
   let totalSetsLogged = 0;
   let exercisesCompleted = 0;
   const prs = [];
@@ -1346,8 +1345,6 @@ function showWorkoutSummary(w, elapsedSec) {
         totalSetsLogged += loggedSets.length;
         const best = loggedSets.reduce((a,b) => (a.weight > b.weight ? a : b));
         exSummary.push({name: e.name, sets: loggedSets.length, best});
-
-        // Check for PR (compare vs previous history)
         const last = getLastSession(w.id, i);
         if (last && best.weight > last.weight) {
           prs.push({name: e.name, prev: last.weight, now: best.weight});
@@ -1358,20 +1355,64 @@ function showWorkoutSummary(w, elapsedSec) {
     });
   }
 
-  // Stats row
-  document.getElementById('summaryStats').innerHTML = isCardio
+  return {
+    workoutId: w ? w.id : null,
+    workoutTitle: w ? w.title : 'Workout',
+    tag: w ? w.tag : '',
+    date: new Date().toISOString(),
+    elapsedSec,
+    isCardio,
+    totalSetsLogged,
+    exercisesCompleted,
+    prs,
+    exSummary
+  };
+}
+
+// Save session history (max 30 entries)
+function saveSessionHistory(summaryData) {
+  let history = JSON.parse(localStorage.getItem('forge_session_history') || '[]');
+  history.unshift(summaryData);
+  if (history.length > 30) history = history.slice(0, 30);
+  localStorage.setItem('forge_session_history', JSON.stringify(history));
+}
+
+// Get session history
+function getSessionHistory() {
+  return JSON.parse(localStorage.getItem('forge_session_history') || '[]');
+}
+
+// Get session for a specific date string (YYYY-MM-DD)
+function getSessionForDate(dateStr) {
+  const history = getSessionHistory();
+  return history.find(s => s.date && s.date.slice(0,10) === dateStr);
+}
+
+// Render summary overlay from data object (used for both live finish and history review)
+function showWorkoutSummaryFromData(data, isReview) {
+  const overlay = document.getElementById('summaryOverlay');
+  const elMin = Math.floor(data.elapsedSec / 60);
+  const elSec = data.elapsedSec % 60;
+  const timeStr = `${elMin}:${elSec.toString().padStart(2,'0')}`;
+
+  const sessionDate = new Date(data.date);
+  const dateLabel = sessionDate.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'short'});
+
+  document.getElementById('summaryTitle').textContent = isReview ? 'SESSION REVIEW' : 'SESSION COMPLETE';
+  document.getElementById('summarySub').textContent = `${data.workoutTitle} · ${dateLabel}`;
+
+  document.getElementById('summaryStats').innerHTML = data.isCardio
     ? `<div class="summary-stat"><div class="summary-stat-num">${timeStr}</div><div class="summary-stat-label">Duration</div></div>
        <div class="summary-stat"><div class="summary-stat-num">${state.sessionsCompleted}</div><div class="summary-stat-label">Total sessions</div></div>
        <div class="summary-stat"><div class="summary-stat-num">${state.streak}</div><div class="summary-stat-label">Day streak</div></div>`
     : `<div class="summary-stat"><div class="summary-stat-num">${timeStr}</div><div class="summary-stat-label">Duration</div></div>
-       <div class="summary-stat"><div class="summary-stat-num">${totalSetsLogged}</div><div class="summary-stat-label">Sets logged</div></div>
-       <div class="summary-stat"><div class="summary-stat-num">${exercisesCompleted}</div><div class="summary-stat-label">Exercises</div></div>`;
+       <div class="summary-stat"><div class="summary-stat-num">${data.totalSetsLogged}</div><div class="summary-stat-label">Sets logged</div></div>
+       <div class="summary-stat"><div class="summary-stat-num">${data.exercisesCompleted}</div><div class="summary-stat-label">Exercises</div></div>`;
 
-  // PRs section
-  if (prs.length > 0) {
+  if (data.prs && data.prs.length > 0) {
     document.getElementById('summaryPrs').innerHTML = `
-      <div class="summary-pr-label">New weight PRs</div>
-      ${prs.map(p => `<div class="summary-pr-item">
+      <div class="summary-pr-label">Weight PRs</div>
+      ${data.prs.map(p => `<div class="summary-pr-item">
         <span class="summary-pr-name">${p.name}</span>
         <span class="summary-pr-val">${p.prev}kg → ${p.now}kg</span>
       </div>`).join('')}`;
@@ -1380,11 +1421,10 @@ function showWorkoutSummary(w, elapsedSec) {
     document.getElementById('summaryPrs').style.display = 'none';
   }
 
-  // Exercise breakdown
-  if (!isCardio && exSummary.length > 0) {
+  if (!data.isCardio && data.exSummary && data.exSummary.length > 0) {
     document.getElementById('summaryExercises').innerHTML = `
       <div class="summary-ex-label">Exercise breakdown</div>
-      ${exSummary.map(e => `<div class="summary-ex-row">
+      ${data.exSummary.map(e => `<div class="summary-ex-row">
         <span class="summary-ex-name">${e.name}</span>
         <span class="summary-ex-data">${e.sets > 0 ? `${e.sets} sets · ${e.best.weight}kg × ${e.best.reps}` : 'Not logged'}</span>
       </div>`).join('')}`;
@@ -1398,6 +1438,7 @@ function showWorkoutSummary(w, elapsedSec) {
 
 function closeSummary() {
   document.getElementById('summaryOverlay').classList.remove('show');
+  renderWeekGrid();
   showScreen('home');
 }
 
@@ -1689,8 +1730,63 @@ function openDayDrawer(dayIdx) {
   const todayIdx = [6,0,1,2,3,4,5][new Date().getDay()];
   const isToday = dayIdx === todayIdx;
   const dayLabel = isToday ? 'Today' : dayFull[dayIdx];
+
+  // Check if there's a completed session for this day of the current week
+  const dayDate = getDateForWeekday(dayIdx);
+  const dateStr = dayDate.toISOString().slice(0,10);
+  const completedSession = getSessionForDate(dateStr);
+
   let html = '';
-  if (!w) {
+
+  // If past day with a completed session, show the session review
+  if (completedSession && !isToday) {
+    const elMin = Math.floor(completedSession.elapsedSec / 60);
+    const elSec = completedSession.elapsedSec % 60;
+    const timeStr = `${elMin}:${elSec.toString().padStart(2,'0')}`;
+    const sessionDate = new Date(completedSession.date);
+    const dateLabel = sessionDate.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'short'});
+
+    const statsHTML = completedSession.isCardio
+      ? `<div class="stat-row">
+          <div class="stat-card"><div class="stat-num">${timeStr}</div><div class="stat-unit">Duration</div></div>
+          <div class="stat-card"><div class="stat-num">Z2</div><div class="stat-unit">HR zone</div></div>
+          <div class="stat-card"><div class="stat-num">✓</div><div class="stat-unit">Complete</div></div>
+        </div>`
+      : `<div class="stat-row">
+          <div class="stat-card"><div class="stat-num">${timeStr}</div><div class="stat-unit">Duration</div></div>
+          <div class="stat-card"><div class="stat-num">${completedSession.totalSetsLogged}</div><div class="stat-unit">Sets logged</div></div>
+          <div class="stat-card"><div class="stat-num">${completedSession.exercisesCompleted}</div><div class="stat-unit">Exercises</div></div>
+        </div>`;
+
+    const prsHTML = completedSession.prs && completedSession.prs.length > 0
+      ? `<div class="section-label" style="margin-top:14px">Weight PRs</div>
+         ${completedSession.prs.map(p => `<div class="drawer-ex" style="border-left:2px solid var(--accent)">
+           <div class="drawer-ex-top">
+             <div class="drawer-ex-name">${p.name}</div>
+             <div class="drawer-ex-sets" style="color:var(--accent)">${p.prev}kg → ${p.now}kg</div>
+           </div>
+         </div>`).join('')}`
+      : '';
+
+    const exHTML = !completedSession.isCardio && completedSession.exSummary
+      ? `<div class="section-label" style="margin-top:14px">Exercise breakdown</div>
+         ${completedSession.exSummary.map(e => `<div class="drawer-ex">
+           <div class="drawer-ex-top">
+             <div class="drawer-ex-name">${e.name}</div>
+             <div class="drawer-ex-sets">${e.sets > 0 ? `${e.sets} sets · ${e.best.weight}kg × ${e.best.reps}` : 'Not logged'}</div>
+           </div>
+         </div>`).join('')}`
+      : '';
+
+    html = `<div class="drawer-header">
+      <div class="drawer-day-tag" style="color:var(--phase2)">Completed · ${dateLabel}</div>
+      <div class="drawer-title">${completedSession.workoutTitle}</div>
+    </div>
+    ${statsHTML}
+    ${prsHTML}
+    ${exHTML}`;
+
+  } else if (!w) {
     html = `<div class="drawer-header">
       <div class="drawer-day-tag">${dayLabel} · Recovery</div>
       <div class="drawer-title">REST DAY</div>
@@ -1701,7 +1797,7 @@ function openDayDrawer(dayIdx) {
     <div class="rest-day-card"><h3>Sleep</h3><p>Aim for 7–9 hours. Growth hormone peaks during deep sleep — rest days are when the gains happen.</p></div>`;
   } else {
     const metaBadges = [w.duration, w.rpe, w.sets].map(m => `<span class="wmeta">${m}</span>`).join('');
-    const exHTML = w.exercises.map(e => `
+    const exListHTML = w.exercises.map(e => `
       <div class="drawer-ex">
         <div class="drawer-ex-top">
           <div style="flex:1">
@@ -1712,17 +1808,27 @@ function openDayDrawer(dayIdx) {
           <div class="drawer-ex-sets">${e.sets}</div>
         </div>
       </div>`).join('');
+
+    // If today and there's a completed session, show both summary and option to start again
+    const completedBanner = (isToday && completedSession)
+      ? `<div class="rest-day-card" style="border-left:2px solid var(--phase2);margin-bottom:14px">
+          <h3 style="color:var(--phase2)">Session completed today</h3>
+          <p>Duration: ${Math.floor(completedSession.elapsedSec/60)}:${(completedSession.elapsedSec%60).toString().padStart(2,'0')} · ${completedSession.totalSetsLogged} sets logged</p>
+        </div>`
+      : '';
+
     html = `<div class="drawer-header">
       <div class="drawer-day-tag">${dayLabel} · ${w.tag}</div>
       <div class="drawer-title">${w.title}</div>
       <div class="drawer-meta">${metaBadges}</div>
     </div>
+    ${completedBanner}
     <div class="drawer-warmup">
       <div class="drawer-warmup-label">Warm-up · 5 min</div>
       <div class="drawer-warmup-text">${w.warmup}</div>
     </div>
     <div class="drawer-ex-label">Exercises · ${w.exercises.length} movements</div>
-    ${exHTML}
+    ${exListHTML}
     <button class="drawer-start-btn" onclick="closeDrawer();loadWorkout('${w.id}');showScreen('workout')">
       ${isToday ? 'Start this session' : 'Preview & start this session'}
     </button>`;
@@ -1731,6 +1837,17 @@ function openDayDrawer(dayIdx) {
   document.getElementById('drawerBackdrop').classList.add('show');
   requestAnimationFrame(() => document.getElementById('dayDrawer').classList.add('open'));
   document.querySelectorAll('.wday').forEach((el,i) => el.classList.toggle('selected', i === dayIdx));
+}
+
+// Get the actual date for a given weekday index (0=Mon) in the current week
+function getDateForWeekday(dayIdx) {
+  const now = new Date();
+  const jsDay = now.getDay(); // 0=Sun
+  const todayIdx = [6,0,1,2,3,4,5][jsDay]; // convert to 0=Mon
+  const diff = dayIdx - todayIdx;
+  const d = new Date(now);
+  d.setDate(d.getDate() + diff);
+  return d;
 }
 
 function closeDrawer() {
