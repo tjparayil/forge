@@ -956,7 +956,7 @@ function getLastSession(workoutId, exIdx) {
 }
 function getNextTarget(last) {
   if (!last || !last.weight) return null;
-  const targetWeight = last.reps >= 12 ? (last.weight + 2.5) : last.weight;
+  const targetWeight = last.reps >= 12 ? (last.weight + 5) : last.weight;
   const targetReps   = last.reps >= 12 ? 12 : last.reps + 1;
   return {weight: targetWeight, reps: targetReps};
 }
@@ -1004,10 +1004,10 @@ function loadWorkout(id) {
     const numSets = parseInt((e.sets.match(/^(\d+)/)||[,'3'])[1]);
 
     const prevHTML = last
-      ? `<div class="prev-row"><span class="prev-label">Last session</span><span class="prev-val">${last.weight}kg × ${last.reps} reps</span></div>`
+      ? `<div class="prev-row"><span class="prev-label">Last session</span><span class="prev-val">${last.weight}lbs × ${last.reps} reps</span></div>`
       : '';
     const targetBadge = target
-      ? `<span class="overload-badge overload-up">Target: ${target.weight}kg × ${target.reps}</span>`
+      ? `<span class="overload-badge overload-up">Target: ${target.weight}lbs × ${target.reps}</span>`
       : `<span class="overload-badge overload-new">First session — log your starting weight</span>`;
 
     const setsHTML = Array.from({length: numSets}, (_,si) => {
@@ -1019,7 +1019,7 @@ function loadWorkout(id) {
       return `<div class="set-row">
         <div class="set-num">S${si+1}</div>
         <div class="set-input-wrap">
-          <div class="set-input-label">kg</div>
+          <div class="set-input-label">lbs</div>
           <input class="set-input" type="number" inputmode="decimal" placeholder="${target?target.weight:''}" value="${wVal||''}" id="w-${i}-${si}" onchange="saveSetLog('${id}',${i},${si},this.value,document.getElementById('r-${i}-${si}').value);updateSetBtn(${i},${si})">
         </div>
         <div class="set-input-wrap">
@@ -1051,7 +1051,7 @@ function loadWorkout(id) {
 
       <button class="log-sets-toggle" id="log-btn-${i}" onclick="toggleLogSets(${i})">
         <span class="log-sets-label">Log sets</span>
-        ${last ? `<span class="log-sets-prev">Last: ${last.weight}kg</span>` : ''}
+        ${last ? `<span class="log-sets-prev">Last: ${last.weight}lbs</span>` : ''}
         <span class="log-sets-arrow">▾</span>
       </button>
       <div class="log-sets-body" id="log-body-${i}">
@@ -1372,10 +1372,86 @@ function buildSessionSummary(w, elapsedSec) {
 // Save session history (max 30 entries)
 function saveSessionHistory(summaryData) {
   let history = JSON.parse(localStorage.getItem('forge_session_history') || '[]');
+  // Prevent duplicate entries for the same date+workout
+  const dateStr = summaryData.date.slice(0,10);
+  history = history.filter(s => !(s.date && s.date.slice(0,10) === dateStr && s.workoutId === summaryData.workoutId));
   history.unshift(summaryData);
   if (history.length > 30) history = history.slice(0, 30);
   localStorage.setItem('forge_session_history', JSON.stringify(history));
 }
+
+// Backfill session history from existing per-exercise log data (for sessions completed before this feature existed)
+function backfillSessionHistory() {
+  const existing = JSON.parse(localStorage.getItem('forge_session_history') || '[]');
+  const existingDates = new Set(existing.map(s => s.date && s.date.slice(0,10)));
+
+  const allLogKeys = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && key.startsWith('log_')) {
+      allLogKeys.push(key);
+    }
+  }
+
+  const newEntries = [];
+  allLogKeys.forEach(key => {
+    // key format: log_WORKOUTID_YYYY-MM-DD
+    const parts = key.replace('log_', '').match(/^(.+)_(\d{4}-\d{2}-\d{2})$/);
+    if (!parts) return;
+    const workoutId = parts[1];
+    const dateStr = parts[2];
+
+    // Skip if we already have a history entry for this date
+    if (existingDates.has(dateStr)) return;
+
+    const w = getWorkout(workoutId);
+    if (!w) return;
+
+    const log = JSON.parse(localStorage.getItem(key) || '{}');
+    let totalSetsLogged = 0;
+    let exercisesCompleted = 0;
+    const exSummary = [];
+
+    w.exercises.forEach((e, i) => {
+      const sets = log[i] || {};
+      const loggedSets = Object.values(sets).filter(s => s.weight > 0 && s.reps > 0);
+      if (loggedSets.length > 0) {
+        exercisesCompleted++;
+        totalSetsLogged += loggedSets.length;
+        const best = loggedSets.reduce((a,b) => (a.weight > b.weight ? a : b));
+        exSummary.push({name: e.name, sets: loggedSets.length, best});
+      } else {
+        exSummary.push({name: e.name, sets: 0, best: null});
+      }
+    });
+
+    if (totalSetsLogged > 0) {
+      newEntries.push({
+        workoutId,
+        workoutTitle: w.title,
+        tag: w.tag,
+        date: dateStr + 'T12:00:00.000Z',
+        elapsedSec: 0, // unknown for old sessions
+        isCardio: workoutId === 'CARDIO',
+        totalSetsLogged,
+        exercisesCompleted,
+        prs: [],
+        exSummary
+      });
+      existingDates.add(dateStr);
+    }
+  });
+
+  if (newEntries.length > 0) {
+    let history = [...existing, ...newEntries];
+    history.sort((a,b) => new Date(b.date) - new Date(a.date));
+    if (history.length > 30) history = history.slice(0, 30);
+    localStorage.setItem('forge_session_history', JSON.stringify(history));
+  }
+}
+
+// Run backfill on load
+backfillSessionHistory();
 
 // Get session history
 function getSessionHistory() {
@@ -1414,7 +1490,7 @@ function showWorkoutSummaryFromData(data, isReview) {
       <div class="summary-pr-label">Weight PRs</div>
       ${data.prs.map(p => `<div class="summary-pr-item">
         <span class="summary-pr-name">${p.name}</span>
-        <span class="summary-pr-val">${p.prev}kg → ${p.now}kg</span>
+        <span class="summary-pr-val">${p.prev}lbs → ${p.now}lbs</span>
       </div>`).join('')}`;
     document.getElementById('summaryPrs').style.display = '';
   } else {
@@ -1426,7 +1502,7 @@ function showWorkoutSummaryFromData(data, isReview) {
       <div class="summary-ex-label">Exercise breakdown</div>
       ${data.exSummary.map(e => `<div class="summary-ex-row">
         <span class="summary-ex-name">${e.name}</span>
-        <span class="summary-ex-data">${e.sets > 0 ? `${e.sets} sets · ${e.best.weight}kg × ${e.best.reps}` : 'Not logged'}</span>
+        <span class="summary-ex-data">${e.sets > 0 ? `${e.sets} sets · ${e.best.weight}lbs × ${e.best.reps}` : 'Not logged'}</span>
       </div>`).join('')}`;
     document.getElementById('summaryExercises').style.display = '';
   } else {
@@ -1492,20 +1568,20 @@ function renderOverload() {
       const prev = e.hist[e.hist.length - 1 - idx - 1];
       const delta = prev ? (h.weight - prev.weight) : 0;
       const deltaHTML = delta > 0
-        ? `<span class="lift-delta up">+${delta}kg</span>`
+        ? `<span class="lift-delta up">+${delta}lbs</span>`
         : `<span class="lift-delta same">—</span>`;
       const d = new Date(h.date);
       const label = `${d.toLocaleDateString('en-GB',{day:'numeric',month:'short'})}`;
       return `<div class="lift-session-row">
         <span class="lift-session-date">${label}</span>
-        <span class="lift-session-data">${h.weight}kg × ${h.reps} reps ${deltaHTML}</span>
+        <span class="lift-session-data">${h.weight}lbs × ${h.reps} reps ${deltaHTML}</span>
       </div>`;
     }).join('');
 
     const targetHTML = target ? `
       <div class="lift-next-target">
         <span class="lift-next-label">Next target</span>
-        <span class="lift-next-val">${target.weight}kg × ${target.reps} reps</span>
+        <span class="lift-next-val">${target.weight}lbs × ${target.reps} reps</span>
       </div>` : '';
 
     return `<div class="lift-history-card">
@@ -1742,7 +1818,7 @@ function openDayDrawer(dayIdx) {
   if (completedSession && !isToday) {
     const elMin = Math.floor(completedSession.elapsedSec / 60);
     const elSec = completedSession.elapsedSec % 60;
-    const timeStr = `${elMin}:${elSec.toString().padStart(2,'0')}`;
+    const timeStr = completedSession.elapsedSec > 0 ? `${elMin}:${elSec.toString().padStart(2,'0')}` : '—';
     const sessionDate = new Date(completedSession.date);
     const dateLabel = sessionDate.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'short'});
 
@@ -1763,7 +1839,7 @@ function openDayDrawer(dayIdx) {
          ${completedSession.prs.map(p => `<div class="drawer-ex" style="border-left:2px solid var(--accent)">
            <div class="drawer-ex-top">
              <div class="drawer-ex-name">${p.name}</div>
-             <div class="drawer-ex-sets" style="color:var(--accent)">${p.prev}kg → ${p.now}kg</div>
+             <div class="drawer-ex-sets" style="color:var(--accent)">${p.prev}lbs → ${p.now}lbs</div>
            </div>
          </div>`).join('')}`
       : '';
@@ -1773,7 +1849,7 @@ function openDayDrawer(dayIdx) {
          ${completedSession.exSummary.map(e => `<div class="drawer-ex">
            <div class="drawer-ex-top">
              <div class="drawer-ex-name">${e.name}</div>
-             <div class="drawer-ex-sets">${e.sets > 0 ? `${e.sets} sets · ${e.best.weight}kg × ${e.best.reps}` : 'Not logged'}</div>
+             <div class="drawer-ex-sets">${e.sets > 0 ? `${e.sets} sets · ${e.best.weight}lbs × ${e.best.reps}` : 'Not logged'}</div>
            </div>
          </div>`).join('')}`
       : '';
@@ -1785,6 +1861,55 @@ function openDayDrawer(dayIdx) {
     ${statsHTML}
     ${prsHTML}
     ${exHTML}`;
+
+  } else if (completedSession && isToday) {
+    // Today with completed session — show full review + option to redo
+    const elMin = Math.floor(completedSession.elapsedSec / 60);
+    const elSec = completedSession.elapsedSec % 60;
+    const timeStr = completedSession.elapsedSec > 0 ? `${elMin}:${elSec.toString().padStart(2,'0')}` : '—';
+
+    const statsHTML = completedSession.isCardio
+      ? `<div class="stat-row">
+          <div class="stat-card"><div class="stat-num">${timeStr}</div><div class="stat-unit">Duration</div></div>
+          <div class="stat-card"><div class="stat-num">Z2</div><div class="stat-unit">HR zone</div></div>
+          <div class="stat-card"><div class="stat-num">✓</div><div class="stat-unit">Complete</div></div>
+        </div>`
+      : `<div class="stat-row">
+          <div class="stat-card"><div class="stat-num">${timeStr}</div><div class="stat-unit">Duration</div></div>
+          <div class="stat-card"><div class="stat-num">${completedSession.totalSetsLogged}</div><div class="stat-unit">Sets logged</div></div>
+          <div class="stat-card"><div class="stat-num">${completedSession.exercisesCompleted}</div><div class="stat-unit">Exercises</div></div>
+        </div>`;
+
+    const prsHTML = completedSession.prs && completedSession.prs.length > 0
+      ? `<div class="section-label" style="margin-top:14px">Weight PRs</div>
+         ${completedSession.prs.map(p => `<div class="drawer-ex" style="border-left:2px solid var(--accent)">
+           <div class="drawer-ex-top">
+             <div class="drawer-ex-name">${p.name}</div>
+             <div class="drawer-ex-sets" style="color:var(--accent)">${p.prev}lbs → ${p.now}lbs</div>
+           </div>
+         </div>`).join('')}`
+      : '';
+
+    const exHTML = !completedSession.isCardio && completedSession.exSummary
+      ? `<div class="section-label" style="margin-top:14px">Exercise breakdown</div>
+         ${completedSession.exSummary.map(e => `<div class="drawer-ex">
+           <div class="drawer-ex-top">
+             <div class="drawer-ex-name">${e.name}</div>
+             <div class="drawer-ex-sets">${e.sets > 0 ? `${e.sets} sets · ${e.best.weight}lbs × ${e.best.reps}` : 'Not logged'}</div>
+           </div>
+         </div>`).join('')}`
+      : '';
+
+    const redoBtn = w ? `<button class="drawer-start-btn" style="background:var(--surface2);color:var(--muted);border:0.5px solid var(--border)" onclick="closeDrawer();loadWorkout('${w.id}');showScreen('workout')">Start another session</button>` : '';
+
+    html = `<div class="drawer-header">
+      <div class="drawer-day-tag" style="color:var(--phase2)">Completed today</div>
+      <div class="drawer-title">${completedSession.workoutTitle}</div>
+    </div>
+    ${statsHTML}
+    ${prsHTML}
+    ${exHTML}
+    ${redoBtn}`;
 
   } else if (!w) {
     html = `<div class="drawer-header">
@@ -1809,20 +1934,11 @@ function openDayDrawer(dayIdx) {
         </div>
       </div>`).join('');
 
-    // If today and there's a completed session, show both summary and option to start again
-    const completedBanner = (isToday && completedSession)
-      ? `<div class="rest-day-card" style="border-left:2px solid var(--phase2);margin-bottom:14px">
-          <h3 style="color:var(--phase2)">Session completed today</h3>
-          <p>Duration: ${Math.floor(completedSession.elapsedSec/60)}:${(completedSession.elapsedSec%60).toString().padStart(2,'0')} · ${completedSession.totalSetsLogged} sets logged</p>
-        </div>`
-      : '';
-
     html = `<div class="drawer-header">
       <div class="drawer-day-tag">${dayLabel} · ${w.tag}</div>
       <div class="drawer-title">${w.title}</div>
       <div class="drawer-meta">${metaBadges}</div>
     </div>
-    ${completedBanner}
     <div class="drawer-warmup">
       <div class="drawer-warmup-label">Warm-up · 5 min</div>
       <div class="drawer-warmup-text">${w.warmup}</div>
