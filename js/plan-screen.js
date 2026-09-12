@@ -5,23 +5,14 @@
 // (swap / sets / reps / move day) with per-week undo, persisted through
 // js/store.js.
 //
-// This is scoped to the Plan screen only -- the rest of the app (home,
-// workout logging, notes, overload) still runs on the legacy inline script
-// in index.html and is untouched here (Phase 3 territory). Expect this file
-// to be absorbed into a general js/app.js router once more screens migrate.
+// Home/workout logging and notes are rendered by js/workout-screen.js and
+// js/notes-screen.js (Phase 3). Expect all of these to be absorbed into a
+// general js/app.js router eventually.
 
-import { Store, localDateStr } from './store.js';
+import { Store } from './store.js';
 import { resolveWeek, weekNumberForDate } from './program.js';
 import { computeVolume, flagVolumeOutOfRange } from './volume.js';
-
-const DAY_LABELS = { mon: 'Mon', tue: 'Tue', wed: 'Wed', thu: 'Thu', fri: 'Fri', sat: 'Sat', sun: 'Sun' };
-const DAY_ORDER = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
-
-function escapeHtml(s) {
-  return String(s ?? '').replace(/[&<>"']/g, c => ({
-    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
-  }[c]));
-}
+import { escapeHtml, DAY_LABELS, DAY_ORDER } from './util.js';
 
 function fmtMuscle(m) {
   return m.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
