@@ -471,30 +471,33 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
     <!-- PLAN -->
     <div class="screen" id="screen-plan">
       <div style="padding:0 20px">
-        <div class="section-label" style="padding-top:8px">12-month roadmap</div>
-        <div id="planContent"></div>
-      </div>
-    </div>
+        <div class="section-label" style="padding-top:8px">31-week program</div>
 
-    <!-- PROGRESS -->
-    <div class="screen" id="screen-progress">
-      <div style="padding:0 20px">
-        <div class="section-label" style="padding-top:8px">Your progress</div>
-        <div class="progress-hero">
-          <div class="progress-hero-num" id="progPct">0%</div>
-          <div class="progress-hero-label">Year complete</div>
+        <div class="today-card" style="cursor:default">
+          <div class="today-tag" id="planBlockTag">Block</div>
+          <div class="today-title" id="planWeekTitle">WEEK 1</div>
+          <div class="today-meta" id="planWeekMeta"></div>
         </div>
-        <div class="prog-bar-wrap">
-          <div class="prog-bar-label"><span>Week 1</span><span>Week 52</span></div>
-          <div class="prog-bar-track"><div class="prog-bar-fill" id="progBar" style="width:0%"></div></div>
+
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:20px">
+          <button class="notes-copy-btn" style="width:auto;padding:8px 14px;margin-top:0" id="planWeekPrev">&larr; Prev</button>
+          <div style="flex:1;text-align:center;font-size:12px;color:var(--muted)">Viewing week <span id="planViewingWeek">1</span> of <span id="planTotalWeeks">31</span></div>
+          <button class="notes-copy-btn" style="width:auto;padding:8px 14px;margin-top:0" id="planWeekNext">Next &rarr;</button>
         </div>
-        <div class="section-label">Phase breakdown</div>
-        <div class="phase-progress" id="phaseProgress"></div>
-        <div class="section-label">Insights</div>
-        <div class="insights" id="insights"></div>
+
+        <div class="section-label">Sessions this week</div>
+        <div id="planSessions"></div>
+
+        <div class="section-label">Weekly volume per muscle</div>
+        <div id="planVolume" style="margin-bottom:8px"></div>
+
+        <div style="display:flex;justify-content:space-between;align-items:center;margin:16px 0 8px">
+          <div class="section-label" style="margin-bottom:0">Edit this week</div>
+          <button class="notes-copy-btn" style="width:auto;padding:5px 12px;font-size:11px" id="planUndoBtn">Undo last change</button>
+        </div>
+        <div id="planEditor"></div>
       </div>
     </div>
-  </div>
 
     <!-- NOTES -->
     <div class="screen" id="screen-notes">
@@ -1594,80 +1597,14 @@ function renderOverload() {
   document.getElementById('overloadContent').innerHTML = heroHTML + `<div class="section-label">Lift history</div>` + cardsHTML;
 }
 
-function renderPlan() {
-  document.getElementById('planContent').innerHTML = DATA.phases.map(p =>
-    `<div class="plan-phase">
-      <div class="plan-phase-header" onclick="togglePhase(${p.num})">
-        <div class="plan-phase-num" style="background:${p.bg};color:${p.color}">${p.num}</div>
-        <div class="plan-phase-info">
-          <div class="plan-phase-title">${p.title}</div>
-          <div class="plan-phase-meta">${p.weeks}</div>
-        </div>
-        <div class="plan-phase-chevron" id="chev-${p.num}">▾</div>
-      </div>
-      <div class="plan-phase-body" id="phase-body-${p.num}">
-        ${p.details.map(d => `<div class="plan-detail-row">
-          <div class="plan-detail-label">${d.label}</div>
-          <div class="plan-detail-val">${d.val}</div>
-        </div>`).join('')}
-        <div class="plan-tips">
-          ${p.tips.map(t => `<div class="plan-tip">${t}</div>`).join('')}
-        </div>
-      </div>
-    </div>`
-  ).join('');
-  togglePhase(1);
-}
-
-function togglePhase(num) {
-  DATA.phases.forEach(p => {
-    const body = document.getElementById(`phase-body-${p.num}`);
-    const chev = document.getElementById(`chev-${p.num}`);
-    if (p.num === num) {
-      const isOpen = body.classList.contains('open');
-      body.classList.toggle('open', !isOpen);
-      chev.classList.toggle('open', !isOpen);
-    } else {
-      body.classList.remove('open');
-      chev.classList.remove('open');
-    }
-  });
-}
-
-function goToPhase(num) {
+// Phase 2: the old 52-week/4-phase Plan accordion (DATA.phases) and the
+// Progress screen (year %, 4-phase breakdown) are both removed -- they were
+// entirely tied to the old hardcoded program, fully replaced by the 31-week
+// block. The Plan screen is now rendered by js/plan-screen.js from
+// data/program.json. goToPhase is kept only because the home screen's
+// phase-strip pills (Phase 3 territory to replace) still call it by name.
+function goToPhase() {
   showScreen('plan');
-  setTimeout(() => togglePhase(num), 100);
-}
-
-function renderProgress() {
-  const pct = Math.round((state.currentWeek / 52) * 100);
-  document.getElementById('progPct').textContent = pct + '%';
-  document.getElementById('progBar').style.width = pct + '%';
-  const phases = [
-    {name:'Phase 1 · Foundation',weeks:8,color:'var(--phase1)'},
-    {name:'Phase 2 · Build',weeks:12,color:'var(--phase2)'},
-    {name:'Phase 3 · Intensify',weeks:16,color:'var(--phase3)'},
-    {name:'Phase 4 · Peak',weeks:16,color:'var(--phase4)'},
-  ];
-  let wk = state.currentWeek;
-  document.getElementById('phaseProgress').innerHTML = phases.map(p => {
-    let fill = 0, status = 'Not started';
-    if (wk > p.weeks) { fill = 100; status = 'Complete'; wk -= p.weeks; }
-    else if (wk > 0) { fill = Math.round((wk/p.weeks)*100); status = `Week ${wk} of ${p.weeks}`; wk = 0; }
-    return `<div class="phase-prog-row">
-      <div class="phase-prog-top">
-        <span class="phase-prog-name" style="color:${p.color}">${p.name}</span>
-        <span class="phase-prog-status">${status}</span>
-      </div>
-      <div class="phase-prog-bar"><div class="phase-prog-fill" style="width:${fill}%;background:${p.color}"></div></div>
-    </div>`;
-  }).join('');
-  document.getElementById('insights').innerHTML = `
-    <div class="insight-card"><div class="insight-label">Sessions completed</div><div class="insight-val">${state.sessionsCompleted} sessions logged</div></div>
-    <div class="insight-card"><div class="insight-label">Current streak</div><div class="insight-val">${state.streak} day${state.streak !== 1 ? 's' : ''} in a row</div></div>
-    <div class="insight-card"><div class="insight-label">Weekly target</div><div class="insight-val">3 sessions · 1 cardio · 3 rest</div></div>
-    <div class="insight-card"><div class="insight-label">Protein target</div><div class="insight-val">130–175g per day (0.7–1g / lb)</div></div>
-  `;
 }
 
 function showScreen(name) {
@@ -1676,6 +1613,11 @@ function showScreen(name) {
   document.getElementById('screen-'+name).classList.add('active');
   const navEl = document.getElementById('nav-'+name);
   if (navEl) navEl.classList.add('active');
+  // All screens share one .scroll container (fixed in Phase 2, audit #1) --
+  // reset its scroll position so switching to a shorter screen while
+  // scrolled deep on another doesn't land on blank space.
+  const scrollEl = document.querySelector('.scroll');
+  if (scrollEl) scrollEl.scrollTop = 0;
   if (name === 'workout' && !state.currentWorkout) openTodayWorkout();
   if (name === 'overload') renderOverload();
   if (name === 'notes') renderNotes();
@@ -1978,11 +1920,11 @@ document.getElementById('statWeek').textContent = state.currentWeek;
 document.getElementById('currentWeek').textContent = state.currentWeek;
 renderWeekGrid();
 renderTodayCard();
-renderPlan();
-renderProgress();
+// Plan screen is rendered by js/plan-screen.js (module script, runs after this).
 // Don't auto-start timer on page load — just prepare the workout view
 const initWorkoutId = getTodayWorkoutId() || 'A';
 state.currentWorkout = initWorkoutId;
 </script>
+<script type="module" src="js/plan-screen.js"></script>
 </body>
 </html>

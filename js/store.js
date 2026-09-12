@@ -263,8 +263,8 @@ export function importSnapshot(json) {
 // this manually in the browser preview before Phase 2 wires it into the UI.
 
 const DB_NAME = 'forge-v2';
-const DB_VERSION = 1;
-const RECORD_STORES = ['setLogs', 'sessionHistory', 'notes', 'bodyLogs'];
+const DB_VERSION = 2;
+const RECORD_STORES = ['setLogs', 'sessionHistory', 'notes', 'bodyLogs', 'weekOverrides'];
 
 export class Store {
   constructor(idbFactory = (typeof indexedDB !== 'undefined' ? indexedDB : null)) {
@@ -305,6 +305,36 @@ export class Store {
       tx.oncomplete = () => resolve();
       tx.onerror = () => reject(tx.error);
     });
+  }
+
+  deleteRecord(storeName, id) {
+    return new Promise((resolve, reject) => {
+      const tx = this.db.transaction(storeName, 'readwrite');
+      tx.objectStore(storeName).delete(id);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+  }
+
+  /** All week-override records for one week, oldest first (application order). */
+  async getOverridesForWeek(weekNumber) {
+    const all = await this.getAll('weekOverrides');
+    return all.filter(o => o.weekNumber === weekNumber).sort((a, b) => a.appliedAt.localeCompare(b.appliedAt));
+  }
+
+  /** Record one approved override (a manual edit now; an approved AI proposal later). */
+  addOverride(record) {
+    const withId = { id: `${record.weekNumber}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`, appliedAt: new Date().toISOString(), ...record };
+    return this.putAll('weekOverrides', [withId]).then(() => withId);
+  }
+
+  /** Undo: remove the most recently applied override for a given week. Scoped to that week only. */
+  async undoLastOverride(weekNumber) {
+    const overrides = await this.getOverridesForWeek(weekNumber);
+    if (overrides.length === 0) return null;
+    const last = overrides[overrides.length - 1];
+    await this.deleteRecord('weekOverrides', last.id);
+    return last;
   }
 
   async getMeta() {
