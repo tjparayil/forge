@@ -1,0 +1,9 @@
+{
+  "name": "forge-v2",
+  "private": true,
+  "type": "module",
+  "description": "Forge personal hypertrophy training app. Static site, no build step, no dependencies.",
+  "scripts": {
+    "test": "node --test"
+  }
+}

@@ -1,0 +1,1195 @@
+{
+  "schemaVersion": 1,
+  "meta": {
+    "name": "Forge Wedding Block",
+    "createdOn": "2026-09-11",
+    "units": "lb",
+    "athlete": {
+      "heightIn": 72,
+      "startWeightLb": 165,
+      "age": null,
+      "trainingLocation": "commercial gym",
+      "otherSports": [
+        "basketball"
+      ]
+    },
+    "goal": "Lean muscle gain, then finish lean and weight-stable for the April 17, 2027 wedding",
+    "startDate": "2026-09-14",
+    "eventDate": "2027-04-17",
+    "totalWeeks": 31,
+    "sessionCapMinutes": 60,
+    "priorityLifts": [
+      "bb_back_squat",
+      "bb_bench"
+    ],
+    "provenance": "Drafted by Claude in chat on 2026-09-11, revised same day to 3 full-body days of about 60 minutes. Set/rep choices and caps are programming judgment, not direct study outputs.",
+    "daysPerWeek": 3,
+    "sessionTargetMinutes": 60
+  },
+  "muscles": [
+    "chest",
+    "lats",
+    "upper_back",
+    "front_delts",
+    "side_delts",
+    "rear_delts",
+    "biceps",
+    "triceps",
+    "quads",
+    "hamstrings",
+    "glutes",
+    "adductors",
+    "calves",
+    "abs"
+  ],
+  "schedule": {
+    "mon": "FBA",
+    "tue": "cardio_or_basketball",
+    "wed": "FBB",
+    "thu": "cardio_or_basketball",
+    "fri": "FBC",
+    "sat": "cardio_or_basketball",
+    "sun": "rest",
+    "configurable": true,
+    "basketballDays": [],
+    "note": "3 lifting days, each targeted at about 60 minutes. Keep at least 1 rest day between lifting days. Basketball days are unknown: app must let the user set them and warn if hard basketball falls the day before Full Body A (heavy squat)."
+  },
+  "cardio": {
+    "sessionsPerWeek": 2,
+    "minutes": "20-30",
+    "options": [
+      "basketball",
+      "cycling",
+      "incline walk",
+      "running",
+      "golf (walking)"
+    ],
+    "rule": "Easy conversational pace unless it is basketball. Rotate by preference, no fixed modality."
+  },
+  "exerciseLibrary": [
+    {
+      "id": "bb_bench",
+      "name": "Barbell bench press",
+      "equipment": "barbell",
+      "pattern": "horizontal_push",
+      "primary": [
+        "chest"
+      ],
+      "secondary": [
+        "triceps",
+        "front_delts"
+      ],
+      "defaultRestSec": 150,
+      "cues": {
+        "setup": [
+          "Eyes under the bar, shoulder blades pinched and down, feet planted."
+        ],
+        "move": [
+          "Lower to mid/lower chest under control, press up and slightly back toward the rack."
+        ],
+        "avoid": [
+          "Bouncing the bar off the chest or letting the butt lift off the bench."
+        ]
+      }
+    },
+    {
+      "id": "cg_bench",
+      "name": "Close-grip bench press",
+      "equipment": "barbell",
+      "pattern": "horizontal_push",
+      "primary": [
+        "chest",
+        "triceps"
+      ],
+      "secondary": [
+        "front_delts"
+      ],
+      "defaultRestSec": 150,
+      "cues": {
+        "setup": [
+          "Hands about shoulder-width (not narrower), same setup as regular bench."
+        ],
+        "move": [
+          "Elbows tucked closer to the torso, touch lower chest, press to lockout."
+        ],
+        "avoid": [
+          "Gripping so narrow that wrists bend back and hurt."
+        ]
+      }
+    },
+    {
+      "id": "db_incline_press",
+      "name": "Incline dumbbell press",
+      "equipment": "dumbbell",
+      "pattern": "horizontal_push",
+      "primary": [
+        "chest"
+      ],
+      "secondary": [
+        "front_delts",
+        "triceps"
+      ],
+      "defaultRestSec": 120,
+      "cues": {
+        "setup": [
+          "Bench at roughly 30 degrees, dumbbells at upper chest, shoulder blades set."
+        ],
+        "move": [
+          "Press up and slightly in, lower for a 2-second count to a deep stretch."
+        ],
+        "avoid": [
+          "Bench set so steep it becomes a shoulder press."
+        ]
+      }
+    },
+    {
+      "id": "db_shoulder_press",
+      "name": "Seated dumbbell shoulder press",
+      "equipment": "dumbbell",
+      "pattern": "vertical_push",
+      "primary": [
+        "front_delts"
+      ],
+      "secondary": [
+        "side_delts",
+        "triceps"
+      ],
+      "defaultRestSec": 120,
+      "cues": {
+        "setup": [
+          "Back supported, dumbbells at ear height, wrists stacked over elbows."
+        ],
+        "move": [
+          "Press up to near lockout, lower under control to ear height."
+        ],
+        "avoid": [
+          "Arching the lower back off the pad to finish reps."
+        ]
+      }
+    },
+    {
+      "id": "lat_pulldown_wide",
+      "name": "Lat pulldown (wide grip)",
+      "equipment": "cable",
+      "pattern": "vertical_pull",
+      "primary": [
+        "lats"
+      ],
+      "secondary": [
+        "biceps",
+        "upper_back",
+        "rear_delts"
+      ],
+      "defaultRestSec": 90,
+      "cues": {
+        "setup": [
+          "Thighs locked under the pad, grip just outside shoulder-width."
+        ],
+        "move": [
+          "Pull elbows down toward your back pockets, bar to upper chest, control the return to a full stretch."
+        ],
+        "avoid": [
+          "Leaning far back and yanking with momentum."
+        ]
+      }
+    },
+    {
+      "id": "lat_pulldown_neutral",
+      "name": "Lat pulldown (neutral/close grip)",
+      "equipment": "cable",
+      "pattern": "vertical_pull",
+      "primary": [
+        "lats"
+      ],
+      "secondary": [
+        "biceps",
+        "upper_back"
+      ],
+      "defaultRestSec": 90,
+      "cues": {
+        "setup": [
+          "Neutral-grip handle, slight lean back, chest up."
+        ],
+        "move": [
+          "Drive elbows down and in, pause 1 second at the bottom."
+        ],
+        "avoid": [
+          "Cutting the top of the rep short; get the full overhead stretch."
+        ]
+      }
+    },
+    {
+      "id": "cs_db_row",
+      "name": "Chest-supported dumbbell row",
+      "equipment": "dumbbell",
+      "pattern": "horizontal_pull",
+      "primary": [
+        "upper_back",
+        "lats"
+      ],
+      "secondary": [
+        "rear_delts",
+        "biceps"
+      ],
+      "defaultRestSec": 90,
+      "cues": {
+        "setup": [
+          "Chest on an incline bench at about 30-45 degrees, arms hanging straight."
+        ],
+        "move": [
+          "Pull elbows back toward the hips, squeeze 1 second, lower fully."
+        ],
+        "avoid": [
+          "Lifting the chest off the pad to cheat the weight up."
+        ]
+      }
+    },
+    {
+      "id": "seated_cable_row",
+      "name": "Seated cable row",
+      "equipment": "cable",
+      "pattern": "horizontal_pull",
+      "primary": [
+        "upper_back",
+        "lats"
+      ],
+      "secondary": [
+        "rear_delts",
+        "biceps"
+      ],
+      "defaultRestSec": 90,
+      "cues": {
+        "setup": [
+          "Sit tall, slight knee bend, neutral spine."
+        ],
+        "move": [
+          "Pull handle to lower ribs, shoulder blades back, let them reach forward on the return."
+        ],
+        "avoid": [
+          "Rocking the torso back and forth to move the stack."
+        ]
+      }
+    },
+    {
+      "id": "cable_lateral_raise",
+      "name": "Cable lateral raise",
+      "equipment": "cable",
+      "pattern": "isolation",
+      "primary": [
+        "side_delts"
+      ],
+      "secondary": [],
+      "defaultRestSec": 60,
+      "cues": {
+        "setup": [
+          "Cable at hand height or lower, stand side-on, slight elbow bend."
+        ],
+        "move": [
+          "Raise out to the side to shoulder height, lower slowly."
+        ],
+        "avoid": [
+          "Shrugging the traps up to move the weight."
+        ]
+      }
+    },
+    {
+      "id": "db_lateral_raise",
+      "name": "Dumbbell lateral raise",
+      "equipment": "dumbbell",
+      "pattern": "isolation",
+      "primary": [
+        "side_delts"
+      ],
+      "secondary": [],
+      "defaultRestSec": 60,
+      "cues": {
+        "setup": [
+          "Slight forward lean, soft elbows, light weight."
+        ],
+        "move": [
+          "Lead with elbows out to shoulder height, 2-3 second lowering."
+        ],
+        "avoid": [
+          "Swinging the body to start each rep."
+        ]
+      }
+    },
+    {
+      "id": "reverse_cable_fly",
+      "name": "Reverse cable fly (rear delt)",
+      "equipment": "cable",
+      "pattern": "isolation",
+      "primary": [
+        "rear_delts"
+      ],
+      "secondary": [
+        "upper_back"
+      ],
+      "defaultRestSec": 60,
+      "cues": {
+        "setup": [
+          "Cables crossed at shoulder height, arms nearly straight."
+        ],
+        "move": [
+          "Sweep arms out and back in a wide arc, pause, return slowly."
+        ],
+        "avoid": [
+          "Turning it into a row by bending the elbows a lot."
+        ]
+      }
+    },
+    {
+      "id": "ez_curl",
+      "name": "EZ-bar curl",
+      "equipment": "barbell",
+      "pattern": "isolation",
+      "primary": [
+        "biceps"
+      ],
+      "secondary": [],
+      "defaultRestSec": 60,
+      "cues": {
+        "setup": [
+          "Elbows pinned at your sides, stand tall."
+        ],
+        "move": [
+          "Curl up without the elbows drifting forward, lower for 2 seconds."
+        ],
+        "avoid": [
+          "Hip swing to finish reps."
+        ]
+      }
+    },
+    {
+      "id": "incline_db_curl",
+      "name": "Incline dumbbell curl",
+      "equipment": "dumbbell",
+      "pattern": "isolation",
+      "primary": [
+        "biceps"
+      ],
+      "secondary": [],
+      "defaultRestSec": 60,
+      "cues": {
+        "setup": [
+          "Bench at about 45-60 degrees, arms hanging straight down behind the torso."
+        ],
+        "move": [
+          "Curl without moving the upper arm, full stretch at the bottom."
+        ],
+        "avoid": [
+          "Shoulders rolling forward to shorten the range."
+        ]
+      }
+    },
+    {
+      "id": "cable_pushdown",
+      "name": "Cable triceps pushdown",
+      "equipment": "cable",
+      "pattern": "isolation",
+      "primary": [
+        "triceps"
+      ],
+      "secondary": [],
+      "defaultRestSec": 60,
+      "cues": {
+        "setup": [
+          "Rope or bar, elbows at sides, slight forward lean."
+        ],
+        "move": [
+          "Extend fully, spread the rope at the bottom, control up to about 90 degrees."
+        ],
+        "avoid": [
+          "Elbows flaring and shoulders taking over."
+        ]
+      }
+    },
+    {
+      "id": "overhead_cable_ext",
+      "name": "Overhead cable triceps extension",
+      "equipment": "cable",
+      "pattern": "isolation",
+      "primary": [
+        "triceps"
+      ],
+      "secondary": [],
+      "defaultRestSec": 60,
+      "cues": {
+        "setup": [
+          "Face away from the stack, rope behind the head, elbows pointed forward."
+        ],
+        "move": [
+          "Extend overhead to lockout, return to a deep stretch."
+        ],
+        "avoid": [
+          "Elbows drifting wide and turning it into a press."
+        ]
+      }
+    },
+    {
+      "id": "bb_back_squat",
+      "name": "Barbell back squat",
+      "equipment": "barbell",
+      "pattern": "squat",
+      "primary": [
+        "quads",
+        "glutes"
+      ],
+      "secondary": [
+        "adductors"
+      ],
+      "defaultRestSec": 180,
+      "cues": {
+        "setup": [
+          "Bar on upper back, big breath and brace, feet about shoulder-width, toes slightly out."
+        ],
+        "move": [
+          "Sit down between the hips to at least parallel if mobility allows, knees track over toes, drive up."
+        ],
+        "avoid": [
+          "Losing the brace and letting the chest collapse out of the hole."
+        ]
+      }
+    },
+    {
+      "id": "bb_rdl",
+      "name": "Barbell Romanian deadlift",
+      "equipment": "barbell",
+      "pattern": "hinge",
+      "primary": [
+        "hamstrings",
+        "glutes"
+      ],
+      "secondary": [
+        "upper_back"
+      ],
+      "defaultRestSec": 150,
+      "cues": {
+        "setup": [
+          "Bar at hips, soft knees locked at that angle, lats tight."
+        ],
+        "move": [
+          "Push hips back, slide bar down the thighs to a deep hamstring stretch, drive hips forward."
+        ],
+        "avoid": [
+          "Rounding the lower back to chase depth."
+        ]
+      }
+    },
+    {
+      "id": "bb_hip_thrust",
+      "name": "Barbell hip thrust",
+      "equipment": "barbell",
+      "pattern": "hinge",
+      "primary": [
+        "glutes"
+      ],
+      "secondary": [
+        "hamstrings"
+      ],
+      "defaultRestSec": 120,
+      "cues": {
+        "setup": [
+          "Upper back on bench edge, bar padded over the hips, feet flat about hip-width."
+        ],
+        "move": [
+          "Drive through heels to full hip extension, chin tucked, pause 1 second."
+        ],
+        "avoid": [
+          "Arching the lower back instead of extending the hips."
+        ]
+      }
+    },
+    {
+      "id": "leg_press",
+      "name": "Leg press",
+      "equipment": "machine",
+      "pattern": "squat",
+      "primary": [
+        "quads"
+      ],
+      "secondary": [
+        "glutes"
+      ],
+      "defaultRestSec": 120,
+      "cues": {
+        "setup": [
+          "Feet mid-platform shoulder-width, lower back flat on the pad."
+        ],
+        "move": [
+          "Lower until knees are well bent without the hips rolling up, press without locking out hard."
+        ],
+        "avoid": [
+          "Pelvis curling off the seat at the bottom."
+        ]
+      }
+    },
+    {
+      "id": "db_bss",
+      "name": "Bulgarian split squat",
+      "equipment": "dumbbell",
+      "pattern": "lunge",
+      "primary": [
+        "quads",
+        "glutes"
+      ],
+      "secondary": [
+        "adductors"
+      ],
+      "defaultRestSec": 90,
+      "cues": {
+        "setup": [
+          "Rear foot laces-down on bench, front foot far enough forward to stay balanced."
+        ],
+        "move": [
+          "Drop the back knee straight down, drive through the front foot."
+        ],
+        "avoid": [
+          "Pushing mostly off the back leg."
+        ]
+      }
+    },
+    {
+      "id": "leg_extension",
+      "name": "Leg extension",
+      "equipment": "machine",
+      "pattern": "isolation",
+      "primary": [
+        "quads"
+      ],
+      "secondary": [],
+      "defaultRestSec": 60,
+      "cues": {
+        "setup": [
+          "Pad on lower shin, knee joint aligned with the machine pivot."
+        ],
+        "move": [
+          "Extend fully, squeeze 1 second, lower for 2 seconds."
+        ],
+        "avoid": [
+          "Kicking the weight up with momentum."
+        ]
+      }
+    },
+    {
+      "id": "seated_leg_curl",
+      "name": "Seated leg curl",
+      "equipment": "machine",
+      "pattern": "isolation",
+      "primary": [
+        "hamstrings"
+      ],
+      "secondary": [],
+      "defaultRestSec": 90,
+      "cues": {
+        "setup": [
+          "Thigh pad snug, knee aligned with pivot, lean slightly forward."
+        ],
+        "move": [
+          "Curl heels toward the seat, control the return to near-straight."
+        ],
+        "avoid": [
+          "Hips lifting off the seat."
+        ]
+      }
+    },
+    {
+      "id": "lying_leg_curl",
+      "name": "Lying leg curl",
+      "equipment": "machine",
+      "pattern": "isolation",
+      "primary": [
+        "hamstrings"
+      ],
+      "secondary": [],
+      "defaultRestSec": 90,
+      "cues": {
+        "setup": [
+          "Hips pressed into the pad, pad just above the heels."
+        ],
+        "move": [
+          "Curl up, pause, lower slowly."
+        ],
+        "avoid": [
+          "Hips popping up to finish reps."
+        ]
+      }
+    },
+    {
+      "id": "standing_calf",
+      "name": "Standing calf raise",
+      "equipment": "machine",
+      "pattern": "isolation",
+      "primary": [
+        "calves"
+      ],
+      "secondary": [],
+      "defaultRestSec": 60,
+      "cues": {
+        "setup": [
+          "Balls of feet on the edge, knees straight but not locked."
+        ],
+        "move": [
+          "Full stretch at the bottom with a 1-2 second pause, rise as high as possible."
+        ],
+        "avoid": [
+          "Bouncing short reps."
+        ]
+      }
+    },
+    {
+      "id": "seated_calf",
+      "name": "Seated calf raise",
+      "equipment": "machine",
+      "pattern": "isolation",
+      "primary": [
+        "calves"
+      ],
+      "secondary": [],
+      "defaultRestSec": 60,
+      "cues": {
+        "setup": [
+          "Pad on lower thighs, balls of feet on the edge."
+        ],
+        "move": [
+          "Pause in the stretch, drive up fully."
+        ],
+        "avoid": [
+          "Partial bouncing reps."
+        ]
+      }
+    },
+    {
+      "id": "cable_crunch",
+      "name": "Cable crunch",
+      "equipment": "cable",
+      "pattern": "isolation",
+      "primary": [
+        "abs"
+      ],
+      "secondary": [],
+      "defaultRestSec": 60,
+      "cues": {
+        "setup": [
+          "Kneel facing the stack, rope beside the head."
+        ],
+        "move": [
+          "Curl the ribs toward the pelvis, round the spine, return slowly."
+        ],
+        "avoid": [
+          "Hinging at the hips instead of flexing the spine."
+        ]
+      }
+    },
+    {
+      "id": "hanging_knee_raise",
+      "name": "Hanging knee raise",
+      "equipment": "bodyweight",
+      "pattern": "isolation",
+      "primary": [
+        "abs"
+      ],
+      "secondary": [],
+      "defaultRestSec": 60,
+      "cues": {
+        "setup": [
+          "Dead hang, shoulders engaged."
+        ],
+        "move": [
+          "Curl the pelvis up as knees rise, lower without swinging."
+        ],
+        "avoid": [
+          "Swinging the legs with momentum."
+        ]
+      }
+    }
+  ],
+  "sessions": [
+    {
+      "id": "FBA",
+      "title": "Full Body A",
+      "focus": "Squat priority, bench secondary",
+      "warmup": "5 min bike, leg swings, bodyweight squats x10, band pull-aparts x20. Ramp-up sets on the first lift: empty bar x10, ~50% x8, ~70% x5, ~85% x2-3 of today's working weight.",
+      "blocks": [
+        {
+          "exerciseId": "bb_back_squat",
+          "sets": 4,
+          "repMin": 8,
+          "repMax": 10,
+          "rir": "2-3",
+          "restSec": 180,
+          "progressVolume": false,
+          "note": "Priority lift. Heavy squat day."
+        },
+        {
+          "exerciseId": "bb_bench",
+          "sets": 3,
+          "repMin": 8,
+          "repMax": 10,
+          "rir": "2",
+          "restSec": 150,
+          "progressVolume": false,
+          "note": "Second weekly bench exposure. Ramp 2 quick sets first."
+        },
+        {
+          "exerciseId": "lat_pulldown_wide",
+          "sets": 3,
+          "repMin": 8,
+          "repMax": 12,
+          "rir": "2",
+          "restSec": 90,
+          "progressVolume": false
+        },
+        {
+          "exerciseId": "seated_leg_curl",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "rir": "1",
+          "restSec": 90,
+          "progressVolume": false
+        },
+        {
+          "exerciseId": "cable_lateral_raise",
+          "sets": 3,
+          "repMin": 12,
+          "repMax": 15,
+          "rir": "1",
+          "restSec": 60,
+          "progressVolume": true
+        },
+        {
+          "exerciseId": "ez_curl",
+          "sets": 2,
+          "repMin": 10,
+          "repMax": 12,
+          "rir": "1",
+          "restSec": 60,
+          "progressVolume": false,
+          "supersetGroup": "A"
+        },
+        {
+          "exerciseId": "cable_pushdown",
+          "sets": 2,
+          "repMin": 10,
+          "repMax": 12,
+          "rir": "1",
+          "restSec": 60,
+          "progressVolume": false,
+          "supersetGroup": "A"
+        }
+      ],
+      "estMinutes": 57
+    },
+    {
+      "id": "FBB",
+      "title": "Full Body B",
+      "focus": "Hinge, upper chest, back, delts",
+      "warmup": "5 min bike or rower, hip hinges with dowel x10, walking lunges x8/leg, band pull-aparts x20. Ramp-up sets on the first lift: empty bar x10, ~50% x8, ~70% x5, ~85% x2-3 of today's working weight.",
+      "blocks": [
+        {
+          "exerciseId": "bb_rdl",
+          "sets": 3,
+          "repMin": 8,
+          "repMax": 10,
+          "rir": "2",
+          "restSec": 150,
+          "progressVolume": false
+        },
+        {
+          "exerciseId": "db_incline_press",
+          "sets": 3,
+          "repMin": 8,
+          "repMax": 12,
+          "rir": "2",
+          "restSec": 120,
+          "progressVolume": false
+        },
+        {
+          "exerciseId": "cs_db_row",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "rir": "2",
+          "restSec": 90,
+          "progressVolume": true
+        },
+        {
+          "exerciseId": "leg_press",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "rir": "2",
+          "restSec": 120,
+          "progressVolume": false
+        },
+        {
+          "exerciseId": "db_lateral_raise",
+          "sets": 3,
+          "repMin": 12,
+          "repMax": 15,
+          "rir": "1",
+          "restSec": 60,
+          "progressVolume": true,
+          "supersetGroup": "B"
+        },
+        {
+          "exerciseId": "reverse_cable_fly",
+          "sets": 2,
+          "repMin": 12,
+          "repMax": 15,
+          "rir": "1",
+          "restSec": 60,
+          "progressVolume": false,
+          "supersetGroup": "B"
+        },
+        {
+          "exerciseId": "standing_calf",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 15,
+          "rir": "1",
+          "restSec": 60,
+          "progressVolume": false
+        },
+        {
+          "exerciseId": "cable_crunch",
+          "sets": 2,
+          "repMin": 10,
+          "repMax": 15,
+          "rir": "1",
+          "restSec": 60,
+          "progressVolume": false
+        }
+      ],
+      "estMinutes": 57
+    },
+    {
+      "id": "FBC",
+      "title": "Full Body C",
+      "focus": "Bench priority, squat secondary",
+      "warmup": "5 min bike, arm circles, band pull-aparts x20, bodyweight squats x10. Ramp-up sets on the first lift: empty bar x10, ~50% x8, ~70% x5, ~85% x2-3 of today's working weight.",
+      "blocks": [
+        {
+          "exerciseId": "bb_bench",
+          "sets": 4,
+          "repMin": 8,
+          "repMax": 10,
+          "rir": "2",
+          "restSec": 150,
+          "progressVolume": false,
+          "note": "Priority lift. Heavy bench day."
+        },
+        {
+          "exerciseId": "bb_back_squat",
+          "sets": 3,
+          "repMin": 8,
+          "repMax": 10,
+          "rir": "3",
+          "restSec": 180,
+          "progressVolume": false,
+          "note": "Volume squat: lighter than Full Body A, crisp reps."
+        },
+        {
+          "exerciseId": "lat_pulldown_neutral",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "rir": "2",
+          "restSec": 90,
+          "progressVolume": true
+        },
+        {
+          "exerciseId": "lying_leg_curl",
+          "sets": 3,
+          "repMin": 10,
+          "repMax": 12,
+          "rir": "1",
+          "restSec": 90,
+          "progressVolume": true
+        },
+        {
+          "exerciseId": "incline_db_curl",
+          "sets": 2,
+          "repMin": 10,
+          "repMax": 12,
+          "rir": "1",
+          "restSec": 60,
+          "progressVolume": false,
+          "supersetGroup": "C"
+        },
+        {
+          "exerciseId": "overhead_cable_ext",
+          "sets": 2,
+          "repMin": 10,
+          "repMax": 12,
+          "rir": "1",
+          "restSec": 60,
+          "progressVolume": false,
+          "supersetGroup": "C"
+        },
+        {
+          "exerciseId": "seated_calf",
+          "sets": 2,
+          "repMin": 12,
+          "repMax": 15,
+          "rir": "1",
+          "restSec": 60,
+          "progressVolume": false
+        }
+      ],
+      "estMinutes": 55
+    }
+  ],
+  "blocks": [
+    {
+      "id": "base",
+      "name": "Base",
+      "weeks": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "startDate": "2026-09-14",
+      "addSetsToTagged": 0,
+      "setMultiplier": 1.0,
+      "rir": "2-3",
+      "nutritionPhase": "lean_gain",
+      "note": "Establish working weights. Log every set."
+    },
+    {
+      "id": "deload_travel",
+      "name": "Travel deload",
+      "weeks": [
+        5
+      ],
+      "startDate": "2026-10-12",
+      "addSetsToTagged": 0,
+      "setMultiplier": 0.5,
+      "rir": "4",
+      "nutritionPhase": "maintenance",
+      "note": "Puerto Rico Oct 15-18. Full Body A Mon and Full Body B Tue/Wed at half sets, or skip lifting while away."
+    },
+    {
+      "id": "build1",
+      "name": "Build 1",
+      "weeks": [
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "startDate": "2026-10-19",
+      "addSetsToTagged": 1,
+      "setMultiplier": 1.0,
+      "rir": "1-2",
+      "nutritionPhase": "lean_gain",
+      "note": "+1 set on exercises tagged progressVolume."
+    },
+    {
+      "id": "deload2",
+      "name": "Deload",
+      "weeks": [
+        11
+      ],
+      "startDate": "2026-11-23",
+      "addSetsToTagged": 0,
+      "setMultiplier": 0.5,
+      "rir": "4",
+      "nutritionPhase": "lean_gain",
+      "note": "Thanksgiving week (Nov 26)."
+    },
+    {
+      "id": "build2",
+      "name": "Build 2",
+      "weeks": [
+        12,
+        13,
+        14,
+        15
+      ],
+      "startDate": "2026-11-30",
+      "addSetsToTagged": 1,
+      "setMultiplier": 1.0,
+      "rir": "1-2",
+      "nutritionPhase": "lean_gain",
+      "note": "Hold Build 1 volume, push loads. Week 15 is Christmas week: 2 sessions (FBA, FBC) acceptable."
+    },
+    {
+      "id": "deload3",
+      "name": "Deload",
+      "weeks": [
+        16
+      ],
+      "startDate": "2026-12-28",
+      "addSetsToTagged": 0,
+      "setMultiplier": 0.5,
+      "rir": "4",
+      "nutritionPhase": "lean_gain",
+      "note": "New Year week."
+    },
+    {
+      "id": "build3",
+      "name": "Build 3 (peak volume)",
+      "weeks": [
+        17,
+        18,
+        19,
+        20,
+        21
+      ],
+      "startDate": "2027-01-04",
+      "addSetsToTagged": 1,
+      "setMultiplier": 1.0,
+      "rir": "1-2 compounds, 0-1 isolations",
+      "nutritionPhase": "lean_gain",
+      "note": "Hold Build volume (60-min cap leaves no room for more sets). Progress by pushing isolation sets to 0-1 RIR and adding load."
+    },
+    {
+      "id": "deload4",
+      "name": "Deload + checkpoint",
+      "weeks": [
+        22
+      ],
+      "startDate": "2027-02-08",
+      "addSetsToTagged": 0,
+      "setMultiplier": 0.5,
+      "rir": "4",
+      "nutritionPhase": "maintenance",
+      "note": "Checkpoint: waist, photos, weight trend. Decide maintenance vs mild deficit for Refine."
+    },
+    {
+      "id": "refine",
+      "name": "Refine",
+      "weeks": [
+        23,
+        24,
+        25,
+        26,
+        27,
+        28
+      ],
+      "startDate": "2027-02-15",
+      "addSetsToTagged": 1,
+      "setMultiplier": 1.0,
+      "rir": "1-2",
+      "nutritionPhase": "maintenance_or_mild_deficit",
+      "note": "Keep loads heavy. Nutrition drives any leaning out."
+    },
+    {
+      "id": "taper",
+      "name": "Taper",
+      "weeks": [
+        29,
+        30
+      ],
+      "startDate": "2027-03-29",
+      "addSetsToTagged": 0,
+      "setMultiplier": 0.7,
+      "rir": "2-3",
+      "nutritionPhase": "maintenance",
+      "note": "Hold weight stable for final suit fitting."
+    },
+    {
+      "id": "wedding_week",
+      "name": "Wedding week",
+      "weeks": [
+        31
+      ],
+      "startDate": "2027-04-12",
+      "addSetsToTagged": 0,
+      "setMultiplier": 0.5,
+      "rir": "3-4",
+      "nutritionPhase": "maintenance",
+      "note": "Full Body A Mon, Full Body B Wed at half sets. Nothing Thu-Sat. Wedding Sat Apr 17."
+    }
+  ],
+  "progression": {
+    "load": {
+      "method": "double_progression",
+      "rule": "When every working set hits repMax at or above target RIR, add load next session. Otherwise add reps.",
+      "incrementsLb": {
+        "barbell": 5,
+        "dumbbell": 5,
+        "cable": 5,
+        "machine": 5
+      },
+      "bodyweight": "Add reps to the top of range, then add load or a harder variation.",
+      "stall": "If reps fall below repMin for 2 consecutive sessions, reduce load 5-10% and rebuild."
+    },
+    "volume": "Blocks add sets only to blocks tagged progressVolume, by the block's addSetsToTagged value. Deload/taper multiply all set counts by setMultiplier (round half up, minimum 1).",
+    "autoDeloadSignals": [
+      "Reps drop on 2+ priority lifts for 2 consecutive sessions",
+      "User logs joint pain on any lift",
+      "User flags poor sleep or high stress for most of a week"
+    ]
+  },
+  "guardrails": {
+    "maxDirectSetsPerMusclePerWeek": 20,
+    "minDirectSetsPerMajorMusclePerWeek": 6,
+    "secondaryMuscleSetWeight": 0.5,
+    "maxSessionMinutes": 60,
+    "maxLoadJumpPct": 10,
+    "priorityLiftMinWeeklyFrequency": 2,
+    "minRirCompounds": 1,
+    "note": "These caps are programming judgment chosen to keep AI proposals conservative. They are not taken directly from a study."
+  },
+  "baseWeekDirectSets": {
+    "quads": 10,
+    "glutes": 10,
+    "chest": 10,
+    "lats": 9,
+    "hamstrings": 9,
+    "side_delts": 6,
+    "biceps": 4,
+    "triceps": 4,
+    "upper_back": 3,
+    "rear_delts": 2,
+    "calves": 5,
+    "abs": 2,
+    "note": "Computed by counting sets where the muscle is tagged primary in exerciseLibrary. App must compute this live. Fractional totals (secondary at 0.5) shown separately."
+  },
+  "nutrition": {
+    "proteinGPerKg": {
+      "min": 1.6,
+      "max": 2.2
+    },
+    "proteinTargetGPerDay": {
+      "min": 120,
+      "max": 165,
+      "default": 145
+    },
+    "phases": {
+      "lean_gain": {
+        "targetGainLbPerWeek": {
+          "min": 0.25,
+          "max": 0.5
+        },
+        "surplusPctOfMaintenance": {
+          "min": 5,
+          "max": 10
+        }
+      },
+      "maintenance": {
+        "targetGainLbPerWeek": {
+          "min": -0.1,
+          "max": 0.1
+        }
+      },
+      "maintenance_or_mild_deficit": {
+        "targetGainLbPerWeek": {
+          "min": -0.5,
+          "max": 0.0
+        },
+        "decidedAt": "week 22 checkpoint"
+      }
+    },
+    "adjustmentRule": "Use a 7-day rolling average of daily morning weigh-ins. Every 2 weeks compare trend to target; adjust calories by 100-150 kcal in the needed direction. Needs age to compute a starting estimate.",
+    "optional": {
+      "creatineMonohydrateGPerDay": "3-5",
+      "note": "Optional. Confirm with a doctor if any kidney or medical concerns."
+    }
+  }
+}
