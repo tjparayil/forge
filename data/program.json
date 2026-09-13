@@ -7,11 +7,9 @@
     "athlete": {
       "heightIn": 72,
       "startWeightLb": 165,
-      "age": null,
+      "age": 32,
       "trainingLocation": "commercial gym",
-      "otherSports": [
-        "basketball"
-      ]
+      "otherSports": []
     },
     "goal": "Lean muscle gain, then finish lean and weight-stable for the April 17, 2027 wedding",
     "startDate": "2026-09-14",

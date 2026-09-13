@@ -543,10 +543,40 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
       </div>
     </div>
 
-    <!-- OVERLOAD -->
+    <!-- OVERLOAD / PROGRESS -->
     <div class="screen" id="screen-overload">
       <div style="padding:0 20px">
-        <div class="section-label" style="padding-top:8px">Progressive overload</div>
+        <div class="section-label" style="padding-top:8px">Your progress</div>
+
+        <div class="today-card" style="cursor:default" id="weddingCountdown"></div>
+
+        <div class="section-label" style="margin-top:16px">Log today</div>
+        <div class="today-card" style="cursor:default">
+          <div class="set-row" style="grid-template-columns:1fr 1fr;margin-bottom:8px">
+            <div class="set-input-wrap"><span class="set-input-label">Weight (lb)</span>
+              <input class="set-input" type="number" inputmode="decimal" id="bodyLogWeight"></div>
+            <div class="set-input-wrap"><span class="set-input-label">Waist (in, optional)</span>
+              <input class="set-input" type="number" inputmode="decimal" id="bodyLogWaist"></div>
+          </div>
+          <div class="set-row" style="grid-template-columns:1fr 1fr;margin-bottom:8px">
+            <div class="set-input-wrap"><span class="set-input-label">Calories (optional)</span>
+              <input class="set-input" type="number" inputmode="numeric" id="bodyLogKcal"></div>
+            <div class="set-input-wrap"><span class="set-input-label">Protein g (optional)</span>
+              <input class="set-input" type="number" inputmode="numeric" id="bodyLogProtein"></div>
+          </div>
+          <button class="notes-save-btn" id="bodyLogSaveBtn">Save today's log</button>
+          <div class="notes-saved-flash" id="bodyLogFlash" style="opacity:0"></div>
+        </div>
+
+        <div class="section-label" style="margin-top:16px">Weight trend</div>
+        <div class="today-card" style="cursor:default">
+          <div id="weightChart"></div>
+        </div>
+
+        <div class="section-label" style="margin-top:16px">Nutrition target</div>
+        <div class="today-card" style="cursor:default" id="nutritionTargetCard"></div>
+
+        <div class="section-label" style="margin-top:16px">Progressive overload</div>
         <div id="overloadContent"></div>
       </div>
     </div>

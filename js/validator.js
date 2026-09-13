@@ -136,7 +136,20 @@ export function validateProgramDesignerOutput(program, overrides, proposal) {
 /** Handover Section 5.2: nutrition changes limited to +/-150 kcal per 2 weeks. */
 const NUTRITION_KCAL_CAP = 150;
 
-export function validateNutritionOutput(program, proposal) {
+// Sanity bounds for a one-time STARTING estimate (no existing baseline) --
+// generous enough to cover any realistic adult, just to catch an obviously
+// wrong or hallucinated number. Not from the handover; a judgment call.
+const STARTING_KCAL_MIN = 1200;
+const STARTING_KCAL_MAX = 6000;
+
+/**
+ * @param hasExistingBaseline - whether meta.nutritionTarget.kcalTarget is
+ *   already set. The +/-150 cap (Section 7: adjustments every 2 weeks)
+ *   only applies to changing an EXISTING baseline -- establishing the
+ *   first one is a one-time estimate, not a "change", so it gets a much
+ *   wider sanity range instead.
+ */
+export function validateNutritionOutput(program, proposal, hasExistingBaseline) {
   if (!proposal || typeof proposal !== 'object') return { valid: false, errors: ['Response is not a JSON object.'] };
   const errors = [];
   if (typeof proposal.kcalChange !== 'number') errors.push('kcalChange is missing or not a number.');
@@ -144,8 +157,12 @@ export function validateNutritionOutput(program, proposal) {
   if (typeof proposal.reason !== 'string' || !proposal.reason.trim()) errors.push('reason is missing.');
   if (errors.length) return { valid: false, errors };
 
-  if (Math.abs(proposal.kcalChange) > NUTRITION_KCAL_CAP) {
-    errors.push(`kcalChange of ${proposal.kcalChange} exceeds the +/-${NUTRITION_KCAL_CAP} kcal per 2-week cap.`);
+  if (hasExistingBaseline) {
+    if (Math.abs(proposal.kcalChange) > NUTRITION_KCAL_CAP) {
+      errors.push(`kcalChange of ${proposal.kcalChange} exceeds the +/-${NUTRITION_KCAL_CAP} kcal per 2-week cap.`);
+    }
+  } else if (proposal.kcalChange < STARTING_KCAL_MIN || proposal.kcalChange > STARTING_KCAL_MAX) {
+    errors.push(`Starting estimate of ${proposal.kcalChange} kcal is outside a plausible ${STARTING_KCAL_MIN}-${STARTING_KCAL_MAX} kcal/day range.`);
   }
   const range = program.nutrition?.proteinTargetGPerDay;
   if (range && (proposal.proteinTargetG < range.min || proposal.proteinTargetG > range.max)) {

@@ -160,6 +160,7 @@ class AgentScreen {
         proteinMin: range.min,
         proteinMax: range.max,
         currentProteinTarget: meta.nutritionTarget?.proteinTargetG ?? range.default,
+        currentKcalTarget: meta.nutritionTarget?.kcalTarget ?? null,
         heightIn: this.program.meta.athlete.heightIn,
         startWeightLb: this.program.meta.athlete.startWeightLb,
         age: this.program.meta.athlete.age,
@@ -205,7 +206,9 @@ class AgentScreen {
       if (!result.valid) { this._showErrors(result.errors, json); return; }
       await this._renderProgramDesignerDiff(json, overrides);
     } else if (kind === 'nutrition') {
-      const result = validateNutritionOutput(this.program, json);
+      const meta = this.store ? await this.store.getMeta() : {};
+      const hasExistingBaseline = meta.nutritionTarget?.kcalTarget != null;
+      const result = validateNutritionOutput(this.program, json, hasExistingBaseline);
       if (!result.valid) { this._showErrors(result.errors, json); return; }
       await this._renderNutritionDiff(json);
     } else if (kind === 'weekly-review') {
@@ -312,12 +315,21 @@ class AgentScreen {
     const meta = this.store ? await this.store.getMeta() : {};
     const range = this.program.nutrition.proteinTargetGPerDay;
     const currentProtein = meta.nutritionTarget?.proteinTargetG ?? range.default;
+    // kcalChange is always relative to whatever baseline is already set (Section
+    // 7: adjustments are +/-100-150 kcal every 2 weeks against an existing
+    // target). If no baseline exists yet, this establishes one starting from 0
+    // plus the change -- Phase 5's Progress screen also offers a plain manual
+    // number entry for setting a starting baseline directly, without going
+    // through the agent/validator path (establishing a number isn't a "change"
+    // that needs a cap).
+    const currentKcal = meta.nutritionTarget?.kcalTarget ?? null;
+    const newKcal = (currentKcal ?? 0) + proposal.kcalChange;
     resultEl.innerHTML = `<div class="lift-history-card">
       <div class="lift-history-name">Proposed nutrition adjustment</div>
       <div class="drawer-ex-tip" style="margin-bottom:10px">${escapeHtml(proposal.reason)}</div>
       <div class="drawer-ex">
-        <div class="drawer-ex-top"><div class="drawer-ex-name">Calories</div></div>
-        <div class="drawer-ex-tip">${proposal.kcalChange >= 0 ? '+' : ''}${proposal.kcalChange} kcal</div>
+        <div class="drawer-ex-top"><div class="drawer-ex-name">Daily calories</div></div>
+        <div class="drawer-ex-tip">${currentKcal != null ? `${currentKcal} kcal` : 'no baseline set'} <strong style="color:var(--accent)">&rarr; ${newKcal} kcal</strong> (${proposal.kcalChange >= 0 ? '+' : ''}${proposal.kcalChange})</div>
       </div>
       <div class="drawer-ex">
         <div class="drawer-ex-top"><div class="drawer-ex-name">Protein target</div></div>
@@ -330,7 +342,13 @@ class AgentScreen {
     </div>`;
     document.getElementById('agentApproveNutritionBtn').addEventListener('click', async () => {
       if (!this.store) { alert('Changes cannot be saved right now (storage unavailable).'); return; }
-      await this.store.putMeta({ nutritionTarget: { kcalChange: proposal.kcalChange, proteinTargetG: proposal.proteinTargetG, reason: proposal.reason, appliedAt: new Date().toISOString() } });
+      await this.store.putMeta({
+        nutritionTarget: {
+          kcalTarget: newKcal,
+          proteinTargetG: proposal.proteinTargetG,
+          lastAdjustment: { kcalChange: proposal.kcalChange, reason: proposal.reason, appliedAt: new Date().toISOString() },
+        },
+      });
       resultEl.innerHTML = `<div class="lift-history-card"><div class="lift-history-name" style="color:var(--accent)">Nutrition target updated.</div></div>`;
       document.getElementById('agentPasteInput').value = '';
     });

@@ -133,32 +133,51 @@ describe('validateProgramDesignerOutput: guardrails', () => {
   });
 });
 
-describe('validateNutritionOutput', () => {
+describe('validateNutritionOutput: adjusting an existing baseline', () => {
   test('accepts a change within the cap and protein range', () => {
-    const r = validateNutritionOutput(program, { kcalChange: 100, proteinTargetG: 150, reason: 'Weight gain trending under target.' });
+    const r = validateNutritionOutput(program, { kcalChange: 100, proteinTargetG: 150, reason: 'Weight gain trending under target.' }, true);
     assert.equal(r.valid, true, JSON.stringify(r.errors));
   });
 
   test('rejects a kcalChange over the +/-150 cap', () => {
-    const r = validateNutritionOutput(program, { kcalChange: 300, proteinTargetG: 145, reason: 'test' });
+    const r = validateNutritionOutput(program, { kcalChange: 300, proteinTargetG: 145, reason: 'test' }, true);
     assert.equal(r.valid, false);
     assert.ok(r.errors.some(e => e.includes('150 kcal')));
   });
 
   test('rejects a negative kcalChange over the cap too', () => {
-    const r = validateNutritionOutput(program, { kcalChange: -200, proteinTargetG: 145, reason: 'test' });
+    const r = validateNutritionOutput(program, { kcalChange: -200, proteinTargetG: 145, reason: 'test' }, true);
     assert.equal(r.valid, false);
   });
 
   test('rejects a protein target outside the seed range', () => {
-    const r = validateNutritionOutput(program, { kcalChange: 0, proteinTargetG: 300, reason: 'test' });
+    const r = validateNutritionOutput(program, { kcalChange: 0, proteinTargetG: 300, reason: 'test' }, true);
     assert.equal(r.valid, false);
     assert.ok(r.errors.some(e => e.includes('g/day range')));
   });
 
   test('rejects missing fields', () => {
-    const r = validateNutritionOutput(program, { reason: 'test' });
+    const r = validateNutritionOutput(program, { reason: 'test' }, true);
     assert.equal(r.valid, false);
+  });
+});
+
+describe('validateNutritionOutput: establishing a first-time baseline', () => {
+  test('accepts a plausible starting estimate well outside the +/-150 adjustment cap', () => {
+    const r = validateNutritionOutput(program, { kcalChange: 2800, proteinTargetG: 150, reason: 'Mifflin-St Jeor estimate for a 32-year-old, 165 lb, moderately active.' }, false);
+    assert.equal(r.valid, true, JSON.stringify(r.errors));
+  });
+
+  test('rejects an implausible starting estimate (too low)', () => {
+    const r = validateNutritionOutput(program, { kcalChange: 500, proteinTargetG: 150, reason: 'test' }, false);
+    assert.equal(r.valid, false);
+    assert.ok(r.errors.some(e => e.includes('plausible')));
+  });
+
+  test('rejects an implausible starting estimate (too high)', () => {
+    const r = validateNutritionOutput(program, { kcalChange: 9000, proteinTargetG: 150, reason: 'test' }, false);
+    assert.equal(r.valid, false);
+    assert.ok(r.errors.some(e => e.includes('plausible')));
   });
 });
 

@@ -12,11 +12,15 @@
 // HTML shell (and index.html's remaining legacy script) still call these by
 // name from onclick="" attributes -- see index.html's <script> for
 // showScreen(), which calls into this bridge on tab switches.
+//
+// Phase 5 adds the body log, weight trend chart, nutrition target display,
+// and wedding countdown to this same Progress screen (renderOverload()).
 
-import { Store, localDateStr } from './store.js';
+import { Store, localDateStr, parseLocalDateStr } from './store.js';
 import { resolveWeek, weekNumberForDate } from './program.js';
 import { computeTarget } from './progression.js';
 import { computeStreak, sessionsCompletedCount } from './stats.js';
+import { computeRollingAverage, computeTargetBand, daysUntilEvent } from './nutrition.js';
 import { escapeHtml, DAY_ORDER, DAY_LABELS, DAY_FULL, mondayIndexOf, dayKeyOf, dateForWeekdayIndex } from './util.js';
 
 const EQUIPMENT_LABEL = { barbell: 'Barbell', dumbbell: 'Dumbbells', cable: 'Cable', machine: 'Machine', bodyweight: 'Bodyweight' };
@@ -32,6 +36,7 @@ class WorkoutApp {
     this.exerciseById = new Map();
     this.sessionHistory = [];
     this.setLogs = [];
+    this.bodyLogs = [];
 
     // Ephemeral UI/session state (not persisted).
     this.activeSessionId = null;   // e.g. 'FBA', 'cardio_or_basketball', 'rest'
@@ -66,6 +71,8 @@ class WorkoutApp {
     await this.refreshWeek();
     await this.refreshHistory();
     this.renderHome();
+    this._wireBodyLogForm();
+    this._renderWeddingCountdown();
   }
 
   async refreshWeek() {
@@ -77,6 +84,7 @@ class WorkoutApp {
   async refreshHistory() {
     this.sessionHistory = this.store ? await this.store.getAll('sessionHistory') : [];
     this.setLogs = this.store ? await this.store.getAll('setLogs') : [];
+    this.bodyLogs = this.store ? await this.store.getAll('bodyLogs') : [];
   }
 
   getSession(sessionId) {
@@ -776,9 +784,133 @@ class WorkoutApp {
     window.showScreen('home');
   }
 
+  // ---------- Body log, weight trend, nutrition target, wedding countdown ----------
+
+  _renderWeddingCountdown() {
+    const el = document.getElementById('weddingCountdown');
+    if (!el) return;
+    const days = daysUntilEvent(this.program, new Date());
+    const eventLabel = new Date(this.program.meta.eventDate + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+    el.innerHTML = `<div class="today-tag">Wedding countdown</div>
+      <div class="today-title">${days >= 0 ? `${days} DAY${days === 1 ? '' : 'S'}` : 'TODAY!'}</div>
+      <div class="today-meta">${escapeHtml(eventLabel)}</div>`;
+  }
+
+  _wireBodyLogForm() {
+    const today = localDateStr(new Date());
+    const existing = this.bodyLogs.find(l => l.date === today);
+    if (existing) {
+      if (existing.weightLb != null) document.getElementById('bodyLogWeight').value = existing.weightLb;
+      if (existing.waistIn != null) document.getElementById('bodyLogWaist').value = existing.waistIn;
+      if (existing.kcal != null) document.getElementById('bodyLogKcal').value = existing.kcal;
+      if (existing.proteinG != null) document.getElementById('bodyLogProtein').value = existing.proteinG;
+    }
+    document.getElementById('bodyLogSaveBtn').addEventListener('click', () => this._saveBodyLog());
+  }
+
+  async _saveBodyLog() {
+    const weightLb = parseFloat(document.getElementById('bodyLogWeight').value);
+    if (!(weightLb > 0)) {
+      alert('Enter a weight before saving (waist, calories, and protein are optional).');
+      return;
+    }
+    if (!this.store) { alert('Changes cannot be saved right now (storage unavailable).'); return; }
+    const date = localDateStr(new Date());
+    const waistRaw = document.getElementById('bodyLogWaist').value;
+    const kcalRaw = document.getElementById('bodyLogKcal').value;
+    const proteinRaw = document.getElementById('bodyLogProtein').value;
+    const entry = {
+      id: date,
+      date,
+      weightLb,
+      waistIn: waistRaw ? parseFloat(waistRaw) : null,
+      kcal: kcalRaw ? parseInt(kcalRaw, 10) : null,
+      proteinG: proteinRaw ? parseInt(proteinRaw, 10) : null,
+    };
+    await this.store.putAll('bodyLogs', [entry]);
+    const idx = this.bodyLogs.findIndex(l => l.id === date);
+    if (idx >= 0) this.bodyLogs[idx] = entry; else this.bodyLogs.push(entry);
+
+    const flash = document.getElementById('bodyLogFlash');
+    flash.textContent = 'Saved';
+    flash.style.opacity = '1';
+    setTimeout(() => { flash.style.opacity = '0'; }, 2000);
+    this._renderWeightChart();
+  }
+
+  _renderWeightChart() {
+    const container = document.getElementById('weightChart');
+    if (!container) return;
+    const today = new Date();
+    const logsWithWeight = this.bodyLogs.filter(l => l.weightLb > 0);
+    if (logsWithWeight.length === 0) {
+      container.innerHTML = `<div class="no-history">No weigh-ins logged yet. Log today's weight above to start the trend.</div>`;
+      return;
+    }
+    const firstLogDate = parseLocalDateStr(logsWithWeight.map(l => l.date).sort()[0]);
+    const windowStart = new Date(Math.min(firstLogDate.getTime(), today.getTime() - 29 * 86400000));
+    const rolling = computeRollingAverage(this.bodyLogs).filter(p => parseLocalDateStr(p.date) >= windowStart);
+    const band = computeTargetBand(this.program, windowStart, today);
+
+    const allWeights = [...rolling.map(p => p.avgWeightLb), ...band.map(p => p.minWeightLb), ...band.map(p => p.maxWeightLb)];
+    const minY = Math.min(...allWeights) - 1;
+    const maxY = Math.max(...allWeights) + 1;
+    const totalDays = Math.max(1, Math.round((today - windowStart) / 86400000));
+    const W = 340, H = 140, PAD = 8;
+    const x = d => PAD + ((parseLocalDateStr(d) - windowStart) / 86400000) / totalDays * (W - 2 * PAD);
+    const y = w => H - PAD - (w - minY) / (maxY - minY) * (H - 2 * PAD);
+
+    const bandTop = band.map(p => `${x(p.date)},${y(p.maxWeightLb)}`).join(' ');
+    const bandBottom = band.slice().reverse().map(p => `${x(p.date)},${y(p.minWeightLb)}`).join(' ');
+    const bandPolygon = band.length > 1 ? `<polygon points="${bandTop} ${bandBottom}" fill="rgba(200,241,53,0.08)" stroke="none"/>` : '';
+    const linePoints = rolling.map(p => `${x(p.date)},${y(p.avgWeightLb)}`).join(' ');
+    const dots = rolling.map(p => `<circle cx="${x(p.date)}" cy="${y(p.avgWeightLb)}" r="2.5" fill="#c8f135"/>`).join('');
+
+    container.innerHTML = `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:140px" preserveAspectRatio="none">
+      ${bandPolygon}
+      ${rolling.length > 1 ? `<polyline points="${linePoints}" fill="none" stroke="#c8f135" stroke-width="2"/>` : ''}
+      ${dots}
+    </svg>
+    <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:4px">
+      <span>${escapeHtml(localDateStr(windowStart))}</span>
+      <span style="color:var(--accent)">7-day avg</span>
+      <span>${escapeHtml(localDateStr(today))}</span>
+    </div>`;
+  }
+
+  async _renderNutritionTargetCard() {
+    const el = document.getElementById('nutritionTargetCard');
+    if (!el) return;
+    const meta = this.store ? await this.store.getMeta() : {};
+    const target = meta.nutritionTarget;
+    const range = this.program.nutrition.proteinTargetGPerDay;
+    const kcalRow = target?.kcalTarget != null
+      ? `<div class="drawer-ex-name">${target.kcalTarget} kcal / day</div>`
+      : `<div class="drawer-ex-name" style="color:var(--muted)">No calorie baseline set yet</div>`;
+    const proteinTarget = target?.proteinTargetG ?? range.default;
+    el.innerHTML = `${kcalRow}
+      <div class="today-meta" style="margin-bottom:10px">Protein target: ${proteinTarget}g/day (range ${range.min}-${range.max}g)</div>
+      <div class="set-row" style="grid-template-columns:1fr auto;gap:8px">
+        <input class="set-input" type="number" inputmode="numeric" id="nutritionManualKcal" placeholder="Set starting calorie target">
+        <button class="notes-copy-btn" style="width:auto;padding:8px 14px;margin-top:0" id="nutritionManualSaveBtn">Save</button>
+      </div>
+      <div class="drawer-ex-tip" style="margin-top:6px">Ask Claude to estimate a starting number (age, height, weight are in your Nutrition agent prompt on the Plan tab), or type one here directly -- this is a one-time baseline, not a capped adjustment.</div>`;
+    document.getElementById('nutritionManualSaveBtn').addEventListener('click', async () => {
+      const val = parseInt(document.getElementById('nutritionManualKcal').value, 10);
+      if (!(val > 0)) { alert('Enter a positive calorie number first.'); return; }
+      if (!this.store) { alert('Changes cannot be saved right now (storage unavailable).'); return; }
+      await this.store.putMeta({ nutritionTarget: { kcalTarget: val, proteinTargetG: proteinTarget, lastAdjustment: null } });
+      this._renderNutritionTargetCard();
+    });
+  }
+
   // ---------- Overload / progress screen ----------
 
-  renderOverload() {
+  async renderOverload() {
+    if (this.store) this.bodyLogs = await this.store.getAll('bodyLogs');
+    this._renderWeddingCountdown();
+    this._renderWeightChart();
+    await this._renderNutritionTargetCard();
     const el = document.getElementById('overloadContent');
     const exerciseIds = [...new Set(this.setLogs.map(l => l.exerciseId))];
     const withData = [];
