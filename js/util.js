@@ -31,3 +31,20 @@ export function dateForWeekdayIndex(dayIdx, today = new Date()) {
   d.setDate(d.getDate() + (dayIdx - todayIdx));
   return d;
 }
+
+/**
+ * Parse JSON out of pasted agent text. Claude often wraps JSON in a
+ * ```json fence, sometimes with a sentence before/after -- this pulls the
+ * fenced block if present, otherwise tries the raw text, and throws a
+ * plain Error with a friendly message on failure (never invents data).
+ */
+export function extractJson(text) {
+  if (!text || !text.trim()) throw new Error('Paste the response text first.');
+  const fenced = /```(?:json)?\s*([\s\S]*?)```/i.exec(text);
+  const raw = (fenced ? fenced[1] : text).trim();
+  try {
+    return JSON.parse(raw);
+  } catch (err) {
+    throw new Error(`That doesn't look like valid JSON (${err.message}). Paste only the JSON object Claude returned.`);
+  }
+}

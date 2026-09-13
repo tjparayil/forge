@@ -125,6 +125,53 @@ class PlanScreen {
     this._renderSessions(resolved);
     this._renderVolume(resolved);
     this._renderEditor(resolved);
+    this._renderHistory(overrides);
+  }
+
+  // Lists every override for this week -- manual edits and agent-approved
+  // Program Designer proposals alike, since both are stored identically
+  // (js/store.js's weekOverrides) -- each with its own undo. This is the
+  // "version history" Phase 4 adds: an agent proposal and a manual edit are
+  // just two authors of the same kind of record.
+  _renderHistory(overrides) {
+    const el = document.getElementById('planHistory');
+    if (!el) return;
+    if (overrides.length === 0) {
+      el.innerHTML = `<div class="no-history" style="padding:16px">No changes made to this week yet.</div>`;
+      return;
+    }
+    el.innerHTML = overrides.slice().reverse().map(o => {
+      const when = new Date(o.appliedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+      const who = o.createdBy === 'agent' ? 'Claude (approved)' : 'You';
+      const summary = o.changes.map(c => {
+        if (c.op === 'move_day') return `moved ${c.fields.day} to ${c.fields.sessionId}`;
+        const ex = this.exerciseById.get(c.exerciseId);
+        const name = ex ? ex.name : c.exerciseId;
+        if (c.op === 'set_sets') return `${name}: ${c.fields.sets} sets`;
+        if (c.op === 'set_reps') return `${name}: ${c.fields.repMin}-${c.fields.repMax} reps`;
+        if (c.op === 'swap_exercise') return `${name} -> ${this.exerciseById.get(c.fields.newExerciseId)?.name || c.fields.newExerciseId}`;
+        return c.op;
+      }).join('; ');
+      return `<div class="drawer-ex">
+        <div class="drawer-ex-top">
+          <div style="flex:1">
+            <div class="drawer-ex-name">${escapeHtml(who)} · ${escapeHtml(when)}</div>
+            <div class="drawer-ex-tip">${escapeHtml(summary)}</div>
+            ${o.rationale ? `<div class="drawer-ex-tip" style="color:var(--muted)">${escapeHtml(o.rationale)}</div>` : ''}
+          </div>
+          <button class="note-delete" data-undo-override="${escapeHtml(o.id)}" title="Undo this change">&times;</button>
+        </div>
+      </div>`;
+    }).join('');
+    el.querySelectorAll('[data-undo-override]').forEach(btn => {
+      btn.addEventListener('click', () => this._undoOverride(btn.dataset.undoOverride));
+    });
+  }
+
+  async _undoOverride(id) {
+    if (!this.store) return;
+    await this.store.deleteRecord('weekOverrides', id);
+    await this._queueRender();
   }
 
   _renderFatalError(message) {

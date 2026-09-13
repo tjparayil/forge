@@ -487,6 +487,26 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
           <button class="notes-copy-btn" style="width:auto;padding:5px 12px;font-size:11px" id="planUndoBtn">Undo last change</button>
         </div>
         <div id="planEditor"></div>
+
+        <div class="section-label" style="margin-top:16px">Change history for this week</div>
+        <div id="planHistory" style="margin-bottom:8px"></div>
+
+        <div class="section-label" style="margin-top:16px">Ask Claude</div>
+        <div class="today-card" style="cursor:default;margin-bottom:16px">
+          <div class="today-meta" style="margin-bottom:10px">No API calls, no stored key. Copy a prompt below into a Claude conversation, then paste the JSON reply back in. Every reply is checked by the same rules as manual edits before you see anything to approve.</div>
+          <div class="set-input-wrap">
+            <span class="set-input-label">Target week (for Design next week)</span>
+            <input class="set-input" type="number" min="1" id="agentTargetWeek" style="width:80px;text-align:center">
+            <span style="font-size:11px;color:var(--muted)">of <span id="agentTotalWeeks">31</span></span>
+          </div>
+        </div>
+        <div id="agentCards"></div>
+        <div id="agentFallbackHolder"></div>
+
+        <div class="section-label" style="margin-top:16px">Paste Claude's response</div>
+        <textarea class="notes-textarea" id="agentPasteInput" placeholder="Paste the JSON Claude returned here..." style="min-height:100px;margin-bottom:8px"></textarea>
+        <button class="notes-save-btn" id="agentValidateBtn">Validate &amp; preview</button>
+        <div id="agentResult" style="margin-top:12px"></div>
       </div>
     </div>
 
@@ -641,5 +661,6 @@ function stopTimer() {
 <script type="module" src="js/workout-screen.js"></script>
 <script type="module" src="js/notes-screen.js"></script>
 <script type="module" src="js/plan-screen.js"></script>
+<script type="module" src="js/agent-screen.js"></script>
 </body>
 </html>
