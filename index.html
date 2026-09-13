@@ -5,6 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Forge">
+<meta name="theme-color" content="#0e0e0f">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" href="icons/icon-192.png">
 <title>Forge — Your Training Plan</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
@@ -692,5 +697,18 @@ function stopTimer() {
 <script type="module" src="js/notes-screen.js"></script>
 <script type="module" src="js/plan-screen.js"></script>
 <script type="module" src="js/agent-screen.js"></script>
+<script>
+// Phase 6: register the service worker for offline app-shell caching.
+// Feature-detected and best-effort -- if this fails (e.g. served over
+// plain http during local dev without a supporting browser), the app
+// still works fully online, it just won't cache for offline use.
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(err => {
+      console.warn('Forge: service worker registration failed', err);
+    });
+  });
+}
+</script>
 </body>
 </html>
